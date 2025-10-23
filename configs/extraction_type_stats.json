@@ -1,0 +1,146 @@
+{
+  "_schema_version": "1.0",
+  "_notes": "Decision rules for surgical approach selection. Each rule specifies which decision class gets what score boost.",
+  "_decision_classes": {
+    "1": "Simple Extraction",
+    "2": "Surgical Extraction (Flap/Bone)",
+    "3": "Coronectomy (Nerve-sparing)",
+    "4": "Odontectomy (Sectioning)"
+  },
+  "_base_priors": {
+    "1": 0.45,
+    "2": 0.60,
+    "3": 0.35,
+    "4": 0.35
+  },
+  "symptom_rules": {
+    "Pain": {
+      "conditions": {"Pain": [1]},
+      "effects": {"2": 0.35, "4": 0.10}
+    },
+    "Swelling": {
+      "conditions": {"Swelling": [1]},
+      "effects": {"2": 0.45, "4": 0.10}
+    },
+    "Trismus": {
+      "conditions": {"Trismus": [1]},
+      "effects": {"2": 0.50, "4": 0.15}
+    },
+    "Pericoronitis": {
+      "conditions": {"Pericoronitis": [1]},
+      "effects": {"2": 0.40}
+    }
+  },
+  "anatomy_rules": {
+    "Impaction_Depth": {
+      "1": {"effects": {"2": 0.25}},
+      "2": {"effects": {"2": 0.45}},
+      "3": {"effects": {"2": 0.50, "4": 0.20}}
+    },
+    "Tooth_Angulation": {
+      "2": {"effects": {"2": 0.20, "4": 0.10}},
+      "3": {"effects": {"2": 0.25, "4": 0.15}},
+      "4": {"effects": {"2": 0.25, "4": 0.45}}
+    },
+    "Root_Count": {
+      ">=3": {"effects": {"4": 0.35}}
+    },
+    "Root_Curvature": {
+      "1": {"effects": {"4": 0.30}}
+    },
+    "Bone_Density": {
+      "3": {"effects": {"4": 0.20}}
+    }
+  },
+  "pathology_rules": {
+    "Cyst": {
+      "conditions": {"Cyst": [1]},
+      "effects": {"2": 0.20, "4": 0.20}
+    }
+  },
+  "mobility_rules": {
+    "Tooth_Mobility": {
+      "1": {"effects": {"1": 0.15}},
+      "2": {"effects": {"1": 0.35, "2": 0.10, "4": -0.10}}
+    }
+  },
+  "root_development_rules": {
+    "Root_Development": {
+      "1": {"effects": {"1": 0.25}},
+      "3": {"effects": {"2": 0.10, "4": 0.10}}
+    }
+  },
+  "periodontal_rules": {
+    "Periodontal_Status": {
+      "2": {"effects": {"2": 0.05}},
+      "3": {"effects": {"1": 0.15, "2": 0.10}}
+    }
+  },
+  "caries_rules": {
+    "Caries_Wisdom": {
+      "conditions": {"Caries_Wisdom": [1]},
+      "effects": {"2": 0.15}
+    },
+    "Caries_Adjacent": {
+      "conditions": {"Caries_Adjacent": [1]},
+      "effects": {"2": 0.10}
+    }
+  },
+  "systemic_rules": {
+    "Diabetes": {
+      "conditions": {"Diabetes": [1]},
+      "effects": {"3": 0.10}
+    },
+    "Osteoporosis": {
+      "conditions": {"Osteoporosis": [1]},
+      "effects": {"3": 0.10}
+    },
+    "Clotting_Disorder": {
+      "conditions": {"Clotting_Disorder": [1]},
+      "effects": {"3": 0.20}
+    },
+    "Bisphosphonates": {
+      "conditions": {"Bisphosphonates": [1]},
+      "effects": {"3": 0.30}
+    },
+    "Prev_Extraction_Issue": {
+      "conditions": {"Prev_Extraction_Issue": [1]},
+      "effects": {"4": 0.15}
+    }
+  },
+  "age_rules": {
+    "Age_Scaling": {
+      "description": "Age factor: (age - 25) / 10.0, max 2.0",
+      "effects": {"4": 0.10}
+    }
+  },
+  "ian_proximity_rules": {
+    "Close_IAN": {
+      "conditions": {"Proximity_Nerve": [1]},
+      "effects": {"3": 1.00, "4": -0.40}
+    },
+    "Deep_IAN_Close": {
+      "conditions": {"Impaction_Depth": [3], "Proximity_Nerve": [1]},
+      "effects": {"3": 1.00, "2": -0.30, "4": -0.30}
+    },
+    "Partial_IAN_Close": {
+      "conditions": {"Impaction_Depth": [2], "Proximity_Nerve": [1]},
+      "effects": {"3": 0.50}
+    },
+    "Mechanical_Difficulty_No_IAN": {
+      "conditions": {"Proximity_Nerve": [0], "Tooth_Angulation": [4]},
+      "additional_conditions": {"Root_Count": [">=3"], "Root_Curvature": [1]},
+      "effects": {"4": 0.60, "2": 0.20}
+    }
+  },
+  "symptom_interactions": {
+    "Swelling_Trismus_IAN_Close": {
+      "conditions": {"Swelling": [1], "Trismus": [1], "Proximity_Nerve": [1]},
+      "effects": {"3": 0.30, "2": 0.10}
+    },
+    "Swelling_Trismus_No_IAN": {
+      "conditions": {"Swelling": [1], "Trismus": [1], "Proximity_Nerve": [0]},
+      "effects": {"2": 0.30, "4": 0.10}
+    }
+  }
+}

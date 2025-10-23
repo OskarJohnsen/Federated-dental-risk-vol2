@@ -1,0 +1,136 @@
+{
+    "_schema_version": "1.0",
+    "_target": "RemovalNeeded", 
+    "_notes": "Multiplicative inclination model toward recommending third molar removal. Apply base_prevalence, then multiply by all matched modifiers and interactions. Values are conservative defaults; tune with your clinician.",
+  
+    "base_prevalence": 0.55,
+  
+    "positive_indications": {
+      "Pericoronitis": { "1": 2.5 },
+  
+      "Caries_Wisdom":   { "1": 2.0 },
+      "Caries_Adjacent": { "1": 1.6 },
+  
+      "Periodontal_Status": {
+        "2": 1.3,
+        "3": 1.8
+      },
+  
+      "Impaction_Depth": {
+        "2": 1.2,
+        "3": 1.4
+      },
+  
+      "Tooth_Angulation": {
+        "2": 1.2,
+        "4": 1.4
+      },
+  
+      "Cyst": { "1": 2.2 },
+  
+      "Pain":      { "1": 1.6 },
+      "Swelling":  { "1": 1.6 },
+      "Trismus":   { "1": 1.4 }
+    },
+  
+    "counter_indications": {
+      "Age": [
+        { "min": 12, "max": 24,  "mult": 1.1 },
+        { "min": 25, "max": 34,  "mult": 1.0 },
+        { "min": 35, "max": 120, "mult": 0.7 }
+      ],
+  
+      "Proximity_Nerve": { 
+        "1": 0.6 
+      },
+  
+      "Systemic_Risk": {
+        "Diabetes":         { "1": 0.9 },
+        "Osteoporosis":     { "1": 0.85 },
+        "Clotting_Disorder":{ "1": 0.7 },
+        "Bisphosphonates":  { "1": 0.6 }
+      }
+    },
+  
+    "contextual_modifiers": {
+      "Smoking": { "1": 0.95 },
+  
+      "Root_Development": {
+        "1": 1.15,
+        "3": 0.95
+      },
+  
+      "Bone_Density": {
+        "3": 0.9
+      }
+    },
+  
+    "interactions": [
+      {
+        "name": "DeepImpaction+Mesioangular",
+        "conditions": { "Impaction_Depth": [3], "Tooth_Angulation": [2] },
+        "mult": 1.2
+      },
+      {
+        "name": "Pericoronitis+Horizontal",
+        "conditions": { "Pericoronitis": [1], "Tooth_Angulation": [4] },
+        "mult": 1.2
+      },
+      {
+        "name": "CloseIAN+OlderAge",
+        "conditions": { "Proximity_Nerve": [1], "Age": { "min": 35, "max": 120 } },
+        "mult": 0.7
+      },
+      {
+        "name": "Cyst+CompleteBony",
+        "conditions": { "Cyst": [1], "Impaction_Depth": [3] },
+        "mult": 1.2
+      }
+    ],
+  
+    "value_maps": {
+      "Tooth_Angulation": {
+        "1": "Vertical",
+        "2": "Mesioangular",
+        "3": "Distoangular",
+        "4": "Horizontal"
+      },
+      "Impaction_Depth": {
+        "1": "Soft tissue",
+        "2": "Partial bony",
+        "3": "Complete bony"
+      },
+      "Periodontal_Status": {
+        "1": "Healthy",
+        "2": "Mild disease",
+        "3": "Severe disease"
+      },
+      "Root_Development": {
+        "1": "Incomplete",
+        "2": "Complete",
+        "3": "Resorbing/other"
+      },
+      "Bone_Density": {
+        "1": "Low",
+        "2": "Normal",
+        "3": "High"
+      },
+      "Proximity_Nerve": {
+        "0": "Not close/clear",
+        "1": "Close or uncertain proximity"
+      },
+      "Root_Curvature": {
+        "0": "Straight",
+        "1": "Curved/divergent"
+      },
+      "Tooth_Mobility": {
+        "0": "None",
+        "1": "Slight",
+        "2": "Severe"
+      },
+      "Sex": {
+        "0": "Male",
+        "1": "Female"
+      }
+    }
+  }
