@@ -1,6 +1,6 @@
 {
   "_schema_version": "1.0",
-  "_notes": "Decision rules for surgical approach selection. Each rule specifies which decision class gets what score boost.",
+  "_notes": "Decision rules for surgical approach selection. Each rule specifies which decision class gets what score boost. These are additives to the score",
   "_decision_classes": {
     "1": "Simple Extraction",
     "2": "Surgical Extraction (Flap/Bone)",
@@ -8,10 +8,10 @@
     "4": "Odontectomy (Sectioning)"
   },
   "_base_priors": {
-    "1": 0.45,
-    "2": 0.60,
-    "3": 0.35,
-    "4": 0.35
+    "1": 0.30,
+    "2": 0.40,
+    "3": 0.20,
+    "4": 0.20
   },
   "symptom_rules": {
     "Pain": {
@@ -32,24 +32,49 @@
     }
   },
   "anatomy_rules": {
-    "Impaction_Depth": {
-      "1": {"effects": {"2": 0.25}},
-      "2": {"effects": {"2": 0.45}},
-      "3": {"effects": {"2": 0.50, "4": 0.20}}
+    "Mandi_Maxi_0": {
+      "conditions": {"Mandi_Maxi": [0]},
+      "effects": {"1": -0.25, "2": 0.35, "3": 0.2, "4": 0.25}
     },
-    "Tooth_Angulation": {
-      "2": {"effects": {"2": 0.20, "4": 0.10}},
-      "3": {"effects": {"2": 0.25, "4": 0.15}},
-      "4": {"effects": {"2": 0.25, "4": 0.45}}
+    "Mandi_Maxi_1": {
+      "conditions": {"Mandi_Maxi": [1]},
+      "effects": {"1": 0.5, "2": -0.2, "3": -0.50, "4": -0.2}
     },
-    "Root_Count": {
-      ">=3": {"effects": {"4": 0.35}}
+    "Impaction_Depth_1": {
+      "conditions": {"Impaction_Depth": [1]},
+      "effects": {"2": 0.25}
     },
-    "Root_Curvature": {
-      "1": {"effects": {"4": 0.30}}
+    "Impaction_Depth_2": {
+      "conditions": {"Impaction_Depth": [2]},
+      "effects": {"2": 0.45}
     },
-    "Bone_Density": {
-      "3": {"effects": {"4": 0.20}}
+    "Impaction_Depth_3": {
+      "conditions": {"Impaction_Depth": [3]},
+      "effects": {"2": 0.50, "4": 0.20}
+    },
+    "Tooth_Angulation_2": {
+      "conditions": {"Tooth_Angulation": [2]},
+      "effects": {"2": 0.20, "4": 0.10}
+    },
+    "Tooth_Angulation_3": {
+      "conditions": {"Tooth_Angulation": [3]},
+      "effects": {"2": 0.25, "4": 0.15}
+    },
+    "Tooth_Angulation_4": {
+      "conditions": {"Tooth_Angulation": [4]},
+      "effects": {"2": 0.25, "4": 0.45}
+    },
+    "Root_Count_High": {
+      "conditions": {"Root_Count": [">=3"]},
+      "effects": {"4": 0.35}
+    },
+    "Root_Curvature_1": {
+      "conditions": {"Root_Curvature": [1]},
+      "effects": {"4": 0.30}
+    },
+    "Bone_Density_3": {
+      "conditions": {"Bone_Density": [3]},
+      "effects": {"4": 0.20}
     }
   },
   "pathology_rules": {

@@ -20,9 +20,14 @@
         "2": 1.2,
         "3": 1.4
       },
+
+      "PartialBony_GingivalCoverage": {
+        "0": 1.00,
+        "1": 1.20
+      },
   
       "Tooth_Angulation": {
-        "2": 1.2,
+        "2": 1.6,
         "4": 1.4
       },
   
@@ -41,7 +46,7 @@
       ],
   
       "Proximity_Nerve": { 
-        "1": 0.6 
+        "1": 0.8
       },
   
       "Systemic_Risk": {
@@ -85,6 +90,19 @@
         "name": "Cyst+CompleteBony",
         "conditions": { "Cyst": [1], "Impaction_Depth": [3] },
         "mult": 1.2
+      },
+      {
+        "name": "Prophylaxis_Young_NoSymptoms",
+        "conditions": {
+          "Age": { "min": 18, "max": 25 },
+          "Tooth_Angulation": [2, 4],
+          "Pain": [0],
+          "Swelling": [0],
+          "Pericoronitis": [0],
+          "Trismus": [0],
+          "PartialBony_GingivalCoverage": [1]
+        },
+        "mult": 1.4
       }
     ],
   
@@ -93,7 +111,8 @@
         "1": "Vertical",
         "2": "Mesioangular",
         "3": "Distoangular",
-        "4": "Horizontal"
+        "4": "Horizontal",
+        "5": "Transverse"
       },
       "Impaction_Depth": {
         "1": "Soft tissue",
