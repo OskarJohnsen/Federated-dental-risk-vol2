@@ -1,0 +1,175 @@
+{
+  "1": {
+    "name": "AcademicCenter",
+    "prevalence_shift": {
+      "Impaction_Depth": [0.2, 0.5, 0.3],
+      "Proximity_Nerve_p": 0.35,
+      "Age_mu": 26
+    },
+    "score_scale": {
+      "1": 0.95,
+      "2": 1.05,
+      "3": 1.00,
+      "4": 1.00
+    },
+    "missingness": {
+      "Tooth_Mobility": 0.05
+    },
+    "measurement_noise": 0.025
+  },
+  "2": {
+    "name": "HighReferralClinic",
+    "prevalence_shift": {
+      "Impaction_Depth": [0.2, 0.4, 0.4],
+      "Proximity_Nerve_p": 0.40,
+      "Age_mu": 30
+    },
+    "score_scale": {
+      "1": 0.90,
+      "2": 0.95,
+      "3": 1.10,
+      "4": 1.10
+    },
+    "missingness": {},
+    "measurement_noise": 0.04
+  },
+  "3": {
+    "name": "RuralGeneral",
+    "prevalence_shift": {
+      "Impaction_Depth": [0.4, 0.45, 0.15],
+      "Proximity_Nerve_p": 0.25,
+      "Age_mu": 27
+    },
+    "score_scale": {
+      "1": 1.05,
+      "2": 1.00,
+      "3": 0.95,
+      "4": 0.95
+    },
+    "missingness": {
+      "Bone_Density": 0.07
+    },
+    "measurement_noise": 0.010
+  },
+  "4": {
+    "name": "OMFS_Experienced",
+    "prevalence_shift": {
+      "Impaction_Depth": [0.25, 0.45, 0.30],
+      "Proximity_Nerve_p": 0.35,
+      "Age_mu": 28
+    },
+    "score_scale": {
+      "1": 0.95,
+      "2": 1.05,
+      "3": 0.95,
+      "4": 1.05
+    },
+    "missingness": {},
+    "measurement_noise": 0.025
+  },
+  "5": {
+    "name": "OlderPopulation",
+    "prevalence_shift": {
+      "Age_mu": 35,
+      "Proximity_Nerve_p": 0.32
+    },
+    "score_scale": {
+      "1": 0.95,
+      "2": 1.00,
+      "3": 1.05,
+      "4": 1.05
+    },
+    "missingness": {},
+    "measurement_noise": 0.05
+  },
+  "6": {
+    "name": "PrivatePractice",
+    "prevalence_shift": {
+      "Impaction_Depth": [0.50, 0.40, 0.10],
+      "Proximity_Nerve_p": 0.28,
+      "Age_mu": 29
+    },
+    "score_scale": {
+      "1": 1.00,
+      "2": 1.05,
+      "3": 0.90,
+      "4": 0.95
+    },
+    "missingness": {},
+    "measurement_noise": 0.055
+  },
+  "7": {
+    "name": "TeachingHospital",
+    "prevalence_shift": {
+      "Impaction_Depth": [0.20, 0.45, 0.35],
+      "Proximity_Nerve_p": 0.38,
+      "Age_mu": 27
+    },
+    "score_scale": {
+      "1": 0.92,
+      "2": 1.00,
+      "3": 1.08,
+      "4": 1.05
+    },
+    "missingness": {
+      "Tooth_Mobility": 0.04,
+      "Bone_Density": 0.03
+    },
+    "measurement_noise": 0.04
+  },
+  "8": {
+    "name": "UrbanCommunity",
+    "prevalence_shift": {
+      "Impaction_Depth": [0.40, 0.45, 0.15],
+      "Proximity_Nerve_p": 0.30,
+      "Age_mu": 28
+    },
+    "score_scale": {
+      "1": 1.00,
+      "2": 1.00,
+      "3": 1.00,
+      "4": 1.00
+    },
+    "missingness": {
+      "Bone_Density": 0.05
+    },
+    "measurement_noise": 0.07
+  },
+  "9": {
+    "name": "PublicHealthClinic",
+    "prevalence_shift": {
+      "Impaction_Depth": [0.45, 0.45, 0.10],
+      "Proximity_Nerve_p": 0.26,
+      "Age_mu": 25
+    },
+    "score_scale": {
+      "1": 1.05,
+      "2": 0.98,
+      "3": 0.93,
+      "4": 0.95
+    },
+    "missingness": {
+      "Tooth_Mobility": 0.08,
+      "Bone_Density": 0.10
+    },
+    "measurement_noise": 0.11
+  },
+  "10": {
+    "name": "SuburbanGeneral",
+    "prevalence_shift": {
+      "Impaction_Depth": [0.38, 0.47, 0.15],
+      "Proximity_Nerve_p": 0.31,
+      "Age_mu": 30
+    },
+    "score_scale": {
+      "1": 0.98,
+      "2": 1.02,
+      "3": 1.00,
+      "4": 1.00
+    },
+    "missingness": {
+      "Tooth_Mobility": 0.03
+    },
+    "measurement_noise": 0.055
+  }
+}
