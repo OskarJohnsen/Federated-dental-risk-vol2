@@ -6,7 +6,7 @@
     "base_prevalence": 0.55,
   
     "positive_indications": {
-      "Pericoronitis": { "1": 2.5 },
+      "Pericoronitis": { "1": 2.0 },
   
       "Caries_Wisdom":   { "1": 2.0 },
       "Caries_Adjacent": { "1": 1.6 },
