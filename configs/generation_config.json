@@ -1,0 +1,69 @@
+{
+  "description": "Configuration for synthetic dataset generation parameters",
+  
+  "dataset": {
+    "n_clients": 10,
+    "patients_per_client": 200,
+    "random_seed": 42,
+    "version": "1.0",
+    "description": "Total dataset size = n_clients × patients_per_client = 2000 patients"
+  },
+  
+  "decision_model": {
+    "temperature": 0.8,
+    "noise_sd": 0.04,
+    "description": "Softmax temperature controls decision randomness. noise_sd adds Gaussian noise to scores before softmax."
+  },
+  
+  "output": {
+    "formats": ["csv", "xlsx"],
+    "output_dir": "../../data/raw/",
+    "filename_base": "fed_recommenders_synthetic_dataset",
+    "description": "Output files: fed_recommenders_synthetic_dataset.csv and .xlsx"
+  },
+  
+  "metadata": {
+    "target_variables": {
+      "classification": [
+        {
+          "name": "Surgical_Extraction_Type",
+          "type": "multiclass",
+          "n_classes": 4,
+          "labels": ["Simple", "Surgical", "Coronectomy", "Odontectomy"]
+        },
+        {
+          "name": "Removal_Indicated",
+          "type": "binary",
+          "n_classes": 2,
+          "labels": ["Monitor", "Remove"]
+        }
+      ],
+      "regression": [
+        {
+          "name": "Risk_AlveolarOsteitis",
+          "range": [0.0, 1.0],
+          "description": "Probability of dry socket"
+        },
+        {
+          "name": "Risk_SecondaryInfection",
+          "range": [0.0, 1.0],
+          "description": "Probability of post-operative infection"
+        },
+        {
+          "name": "Risk_NerveDysesthesia",
+          "range": [0.0, 1.0],
+          "description": "Probability of nerve damage (IAN)"
+        },
+        {
+          "name": "Risk_Bleeding",
+          "range": [0.0, 1.0],
+          "description": "Probability of excessive bleeding"
+        }
+      ]
+    },
+    "n_features": 26,
+    "n_targets": 6,
+    "total_columns": 44
+  }
+}
+
