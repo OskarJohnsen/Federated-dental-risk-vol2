@@ -4,27 +4,25 @@
   "_decision_classes": {
     "1": "Simple Extraction",
     "2": "Surgical Extraction (Flap/Bone)",
-    "3": "Coronectomy (Nerve-sparing)",
-    "4": "Odontectomy (Sectioning)"
+    "3": "Coronectomy (Nerve-sparing)"
   },
   "_base_priors": {
     "1": 0.30,
-    "2": 0.40,
-    "3": 0.20,
-    "4": 0.20
+    "2": 0.50,
+    "3": 0.20
   },
   "symptom_rules": {
     "Pain": {
       "conditions": {"Pain": [1]},
-      "effects": {"2": 0.35, "4": 0.10}
+      "effects": {"2": 0.35}
     },
     "Swelling": {
       "conditions": {"Swelling": [1]},
-      "effects": {"2": 0.45, "4": 0.10}
+      "effects": {"2": 0.45}
     },
     "Trismus": {
       "conditions": {"Trismus": [1]},
-      "effects": {"2": 0.50, "4": 0.15}
+      "effects": {"2": 0.50}
     },
     "Pericoronitis": {
       "conditions": {"Pericoronitis": [1]},
@@ -34,11 +32,11 @@
   "anatomy_rules": {
     "Mandi_Maxi_0": {
       "conditions": {"Mandi_Maxi": [0]},
-      "effects": {"1": -0.25, "2": 0.35, "3": 0.2, "4": 0.25}
+      "effects": {"1": -0.25, "2": 0.35, "3": 0.2}
     },
     "Mandi_Maxi_1": {
       "conditions": {"Mandi_Maxi": [1]},
-      "effects": {"1": 0.5, "2": -0.2, "3": -0.50, "4": -0.2}
+      "effects": {"1": 0.5, "2": -0.2, "3": -0.50}
     },
     "Impaction_Depth_1": {
       "conditions": {"Impaction_Depth": [1]},
@@ -50,49 +48,37 @@
     },
     "Impaction_Depth_3": {
       "conditions": {"Impaction_Depth": [3]},
-      "effects": {"2": 0.50, "4": 0.20}
+      "effects": {"2": 0.50}
     },
     "Tooth_Angulation_2": {
       "conditions": {"Tooth_Angulation": [2]},
-      "effects": {"2": 0.20, "4": 0.10}
+      "effects": {"2": 0.20}
     },
     "Tooth_Angulation_3": {
       "conditions": {"Tooth_Angulation": [3]},
-      "effects": {"2": 0.25, "4": 0.15}
+      "effects": {"2": 0.25}
     },
     "Tooth_Angulation_4": {
       "conditions": {"Tooth_Angulation": [4]},
-      "effects": {"2": 0.25, "4": 0.45}
-    },
-    "Root_Count_High": {
-      "conditions": {"Root_Count": [">=3"]},
-      "effects": {"4": 0.35}
-    },
-    "Root_Curvature_1": {
-      "conditions": {"Root_Curvature": [1]},
-      "effects": {"4": 0.30}
-    },
-    "Bone_Density_3": {
-      "conditions": {"Bone_Density": [3]},
-      "effects": {"4": 0.20}
+      "effects": {"2": 0.25}
     }
   },
   "pathology_rules": {
     "Cyst": {
       "conditions": {"Cyst": [1]},
-      "effects": {"2": 0.20, "4": 0.20}
+      "effects": {"2": 0.20}
     }
   },
   "mobility_rules": {
     "Tooth_Mobility": {
       "1": {"effects": {"1": 0.15}},
-      "2": {"effects": {"1": 0.35, "2": 0.10, "4": -0.10}}
+      "2": {"effects": {"1": 0.35, "2": 0.10}}
     }
   },
   "root_development_rules": {
     "Root_Development": {
       "1": {"effects": {"1": 0.25}},
-      "3": {"effects": {"2": 0.10, "4": 0.10}}
+      "3": {"effects": {"2": 0.10}}
     }
   },
   "periodontal_rules": {
@@ -127,26 +113,16 @@
     "Bisphosphonates": {
       "conditions": {"Bisphosphonates": [1]},
       "effects": {"3": 0.30}
-    },
-    "Prev_Extraction_Issue": {
-      "conditions": {"Prev_Extraction_Issue": [1]},
-      "effects": {"4": 0.15}
-    }
-  },
-  "age_rules": {
-    "Age_Scaling": {
-      "description": "Age factor: (age - 25) / 10.0, max 2.0",
-      "effects": {"4": 0.10}
     }
   },
   "ian_proximity_rules": {
     "Close_IAN": {
       "conditions": {"Proximity_Nerve": [1]},
-      "effects": {"3": 1.00, "4": -0.40}
+      "effects": {"3": 1.00}
     },
     "Deep_IAN_Close": {
       "conditions": {"Impaction_Depth": [3], "Proximity_Nerve": [1]},
-      "effects": {"3": 1.00, "2": -0.30, "4": -0.30}
+      "effects": {"3": 1.00, "2": -0.30}
     },
     "Partial_IAN_Close": {
       "conditions": {"Impaction_Depth": [2], "Proximity_Nerve": [1]},
@@ -155,7 +131,7 @@
     "Mechanical_Difficulty_No_IAN": {
       "conditions": {"Proximity_Nerve": [0], "Tooth_Angulation": [4]},
       "additional_conditions": {"Root_Count": [">=3"], "Root_Curvature": [1]},
-      "effects": {"4": 0.60, "2": 0.20}
+      "effects": {"2": 0.20}
     }
   },
   "symptom_interactions": {
@@ -165,7 +141,7 @@
     },
     "Swelling_Trismus_No_IAN": {
       "conditions": {"Swelling": [1], "Trismus": [1], "Proximity_Nerve": [0]},
-      "effects": {"2": 0.30, "4": 0.10}
+      "effects": {"2": 0.30}
     }
   }
 }

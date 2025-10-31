@@ -10,8 +10,8 @@
   },
   
   "decision_model": {
-    "temperature": 0.8,
-    "noise_sd": 0.04,
+    "temperature": 1.8,
+    "noise_sd": 0.17,
     "description": "Softmax temperature controls decision randomness. noise_sd adds Gaussian noise to scores before softmax."
   },
   
@@ -28,8 +28,8 @@
         {
           "name": "Surgical_Extraction_Type",
           "type": "multiclass",
-          "n_classes": 4,
-          "labels": ["Simple", "Surgical", "Coronectomy", "Odontectomy"]
+          "n_classes": 3,
+          "labels": ["Simple", "Surgical", "Coronectomy"]
         },
         {
           "name": "Removal_Indicated",
