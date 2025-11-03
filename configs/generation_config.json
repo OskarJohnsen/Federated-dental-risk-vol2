@@ -26,12 +26,6 @@
     "target_variables": {
       "classification": [
         {
-          "name": "Surgical_Extraction_Type",
-          "type": "multiclass",
-          "n_classes": 3,
-          "labels": ["Simple", "Surgical", "Coronectomy"]
-        },
-        {
           "name": "Removal_Indicated",
           "type": "binary",
           "n_classes": 2,

@@ -211,6 +211,7 @@ __marimo__/
 
 # Experiment results and artifacts
 results/
+checkpoints/
 *.pt
 *.pth
 *.ckpt
