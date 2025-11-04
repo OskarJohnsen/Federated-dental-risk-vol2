@@ -144,7 +144,7 @@ class BaseTrainer:
             reg_preds = torch.cat(all_reg_preds)
             reg_labels = torch.cat(all_reg_labels)
 
-            metrics["loss_reg"] = total_loss_reg / n_samples if n_samples > 0 else 0.0
+            metrics["loss_reg"] = total_loss_reg / n_samples
             metrics["mse_reg"] = mean_squared_error(reg_preds, reg_labels)
             metrics["rmse_reg"] = torch.sqrt(metrics["mse_reg"])
             metrics["mae_reg"] = mean_absolute_error(reg_preds, reg_labels)

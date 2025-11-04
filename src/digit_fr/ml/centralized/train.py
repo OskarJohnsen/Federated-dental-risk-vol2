@@ -58,9 +58,8 @@ def main():
     final_metrics = trainer.evaluate(test_loader)
     
     for metric_name, metric_value in final_metrics.items():
-        print(f"{metric_name}: {metric_value:.4f}")
-    
-    print(f"\nCheckpoint saved: {results['checkpoint_path']}")
+        print(f"{metric_name}: {metric_value}")
+
     print("\nDone")
 
 if __name__ == '__main__':
