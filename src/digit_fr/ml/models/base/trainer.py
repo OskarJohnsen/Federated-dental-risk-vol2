@@ -13,12 +13,13 @@ class BaseTrainer:
     Base trainer for all training approaches (centralized, local, federated).
     """
 
-    def __init__(self, model, device="cpu", seed=None, optimizer=None, loss_clf=None, loss_reg=None, experiment_type: str = "base"):
+    def __init__(self, model, device="cpu", seed = None, optimizer = None, loss_clf = None, loss_reg = None, scheduler = None, experiment_type: str = "base"):
         self.model = model
         self.device = torch.device(device)
         self.optimizer = optimizer
         self.loss_clf = loss_clf
         self.loss_reg = loss_reg
+        self.scheduler = scheduler
         self.model.to(self.device)
         self.training_history = {"train_loss": [], "val_loss": []}
         self.seed = seed
@@ -39,6 +40,8 @@ class BaseTrainer:
                 self.optimizer.zero_grad()
                 outputs = self.model(inputs)
                 
+                lambda_clf = 1.0
+                lambda_reg = 200.0
                 loss_clf = 0.0
                 loss_reg = 0.0
                 
@@ -50,11 +53,14 @@ class BaseTrainer:
                     reg_labels = labels["regression"].to(self.device)
                     loss_reg = self.loss_reg(outputs["regression"], reg_labels)
                 
-                total_loss = loss_clf + loss_reg
+                total_loss = lambda_clf * loss_clf + lambda_reg * loss_reg
                 
                 total_loss.backward()
                 self.optimizer.step()
                 running_loss += total_loss.item()
+            
+            if self.scheduler is not None:
+                self.scheduler.step()
             
             avg_epoch_loss = running_loss / len(train_loader)
             self.training_history["train_loss"].append(avg_epoch_loss)
