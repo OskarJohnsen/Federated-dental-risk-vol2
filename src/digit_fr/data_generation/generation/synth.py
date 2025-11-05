@@ -166,14 +166,18 @@ def generate_dataset(configs: Dict[str, Any]) -> pd.DataFrame:
         removal_probs.append(removal_prob)
 
         alveolar_risk = compute_risk_from_evidence(row, "AlveolarOsteitis", configs["risks"], d)
+        alveolar_risk_binary = int(np.random.rand() < alveolar_risk)
         infection_risk = compute_risk_from_evidence(row, "SecondaryInfection", configs["risks"], d)
+        infection_risk_binary = int(np.random.rand() < infection_risk)
         nerve_risk = compute_risk_from_evidence(row, "NerveDysesthesia", configs["risks"], d)
+        nerve_risk_binary = int(np.random.rand() < nerve_risk)
         bleeding_risk = compute_risk_from_evidence(row, "Bleeding", configs["risks"], d)
+        bleeding_risk_binary = int(np.random.rand() < bleeding_risk)
 
-        alveolar_risks.append(alveolar_risk)
-        infection_risks.append(infection_risk)
-        nerve_risks.append(nerve_risk)
-        bleeding_risks.append(bleeding_risk)
+        alveolar_risks.append(alveolar_risk_binary)
+        infection_risks.append(infection_risk_binary)
+        nerve_risks.append(nerve_risk_binary)
+        bleeding_risks.append(bleeding_risk_binary)
 
     df["Surgical_Extraction_Type"] = decisions
     df["Score_1"] = score1; df["Score_2"] = score2; df["Score_3"] = score3

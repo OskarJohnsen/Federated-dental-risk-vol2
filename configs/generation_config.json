@@ -10,8 +10,8 @@
   },
   
   "decision_model": {
-    "temperature": 1.8,
-    "noise_sd": 0.17,
+    "temperature": 1.0,
+    "noise_sd": 0.09,
     "description": "Softmax temperature controls decision randomness. noise_sd adds Gaussian noise to scores before softmax."
   },
   
@@ -24,39 +24,35 @@
   
   "metadata": {
     "target_variables": {
-      "classification": [
-        {
-          "name": "Removal_Indicated",
-          "type": "binary",
-          "n_classes": 2,
-          "labels": ["Monitor", "Remove"]
-        }
-      ],
-      "regression": [
+      "classifcation": [
         {
           "name": "Risk_AlveolarOsteitis",
-          "range": [0.0, 1.0],
-          "description": "Probability of dry socket"
+          "type": "binary",
+          "n_classes": 2,
+          "labels": ["No", "Yes"]
         },
         {
           "name": "Risk_SecondaryInfection",
-          "range": [0.0, 1.0],
-          "description": "Probability of post-operative infection"
+          "type": "binary",
+          "n_classes": 2,
+          "labels": ["No", "Yes"]
         },
         {
           "name": "Risk_NerveDysesthesia",
-          "range": [0.0, 1.0],
-          "description": "Probability of nerve damage (IAN)"
+          "type": "binary",
+          "n_classes": 2,
+          "labels": ["No", "Yes"]
         },
         {
           "name": "Risk_Bleeding",
-          "range": [0.0, 1.0],
-          "description": "Probability of excessive bleeding"
+          "type": "binary",
+          "n_classes": 2,
+          "labels": ["No", "Yes"]
         }
       ]
     },
     "n_features": 26,
-    "n_targets": 6,
+    "n_targets": 4,
     "total_columns": 44
   }
 }
