@@ -3,7 +3,6 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 
-
 def load_raw_data():
     df = pd.read_csv(root_path('data', 'raw', 'fed_recommenders_synthetic_dataset.csv'))
     
@@ -19,6 +18,15 @@ def load_raw_data():
         if col in X.columns:
             missing_indicator_name = f'{col}_MISSING'
             X[missing_indicator_name] = X[col].isnull().astype(float)
+    
+    # onehot only nominal features
+    features_to_onehot = ['Surgical_Extraction_Type', 'Tooth_Angulation']
+    
+    for col in features_to_onehot:
+        if col in X.columns:
+            dummies = pd.get_dummies(X[col], prefix=col, drop_first=False, dtype=float)
+            X = X.drop(columns=[col])
+            X = pd.concat([X, dummies], axis=1)
     
     # impute missing values # TODO
     imputer = SimpleImputer(strategy='median')
