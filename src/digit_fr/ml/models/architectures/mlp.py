@@ -3,13 +3,12 @@ import torch
 import torch.nn as nn
 from digit_fr.ml.models.base.model import BaseModel
 
-
 class MLP(BaseModel):
     """
     MLP
     """
-    def __init__(self, input_size: int, hidden_size: List[int] = [128, 64], dropout: float = 0.2, n_clf_classes: Optional[int] = None, n_reg_targets: Optional[int] = None):
-        super().__init__(input_size, n_classification_classes=n_clf_classes, n_regression_targets=n_reg_targets)
+    def __init__(self, input_size: int, hidden_size: List[int] = [128, 64], dropout: float = 0.2, n_clf_classes: Optional[int] = None):
+        super().__init__(input_size, n_classification_classes=n_clf_classes)
         
         self.hidden_sizes = hidden_size
         self.dropout = dropout
@@ -26,15 +25,23 @@ class MLP(BaseModel):
         
         self.shared_layers = nn.Sequential(*layers)
 
-        self.classification_head = nn.Linear(hidden_size[-1], n_clf_classes)
-        self.regression_head = nn.Linear(hidden_size[-1], n_reg_targets)
+        if n_clf_classes is not None:
+            self.classification_heads = nn.ModuleList([
+                nn.Linear(hidden_size[-1], 1) for _ in range(n_clf_classes)
+            ])
+        else:
+            self.classification_heads = None
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         outputs = {}
-
-        outputs["classification"] = self.classification_head(self.shared_layers(x))
-        outputs["regression"] = torch.sigmoid(self.regression_head(self.shared_layers(x)))
-
+        shared_features = self.shared_layers(x)
+        if self.classification_heads is not None:
+            risk_logits = []
+            for head in self.classification_heads:
+                risk_logits.append(head(shared_features))
+            outputs["classification"] = torch.cat(risk_logits, dim=1)
+        else:
+            outputs["classification"] = torch.zeros(shared_features.shape[0], 0, device=shared_features.device)
         return outputs
     
     def get_config(self) -> Dict[str, Any]:
