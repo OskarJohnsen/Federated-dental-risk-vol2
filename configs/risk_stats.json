@@ -2,23 +2,23 @@
     "_schema_version": "1.1",
     "_notes": "Multiplicative risk model. Apply base_incidence, then multiply by matched modifiers and interactions.",
     "AlveolarOsteitis": {
-      "base_incidence": 0.05,
+      "base_incidence": 0.03,
       "risk_modifiers": {
-        "Impaction_Depth": { "1": 1.0, "2": 1.2, "3": 1.3 },
-        "Pericoronitis": { "1": 1.15 },
+        "Impaction_Depth": { "1": 1.0, "2": 1.3, "3": 1.4 },
+        "Pericoronitis": { "1": 1.4 },
         "Age": [
           {"min": 12, "max": 24, "mult": 0.8},
-          {"min": 25, "max": 34, "mult": 1.2},
+          {"min": 25, "max": 34, "mult": 1.5},
           {"min": 35, "max": 120, "mult": 1.1}
         ]
       },
       "interactions": [
-        { "name": "DeepImpaction+Pericoronitis", "conditions": {"Impaction_Depth": [3], "Pericoronitis": [1]}, "mult": 1.2 }
+        { "name": "DeepImpaction+Pericoronitis", "conditions": {"Impaction_Depth": [3], "Pericoronitis": [1]}, "mult": 1.8 }
       ],
       "surgery_modifiers": {
-      "1": 0.90,
-      "2": 1.05,
-      "3": 1.00
+      "1": 0.70,
+      "2": 1.4,
+      "3": 1.35
       },
       "notes": "Incidence ~3.4–6.3%. Rises with impaction depth and pericoronitis. Age and host factors slightly increase risk.",
       "references": [
@@ -27,21 +27,20 @@
       ]
     },
     "SecondaryInfection": {
-      "base_incidence": 0.037,
+      "base_incidence": 0.015,
       "risk_modifiers": {
-        "Impaction_Depth": { "1": 0.6, "2": 1.15, "3": 1.25 },
-        "Cyst": { "1": 1.4 },
-        "Diabetes": { "1": 1.2 },
-        "Smoking": { "1": 1.05 },
-        "Mandi_Maxi": {"0": 1.15, "1": 1.0}
+        "Impaction_Depth": { "1": 0.6, "2": 1.3, "3": 2.5 },
+        "Cyst": { "1": 1.5 },
+        "Periodontal_Status": { "2": 1.5, "3": 2.5},
+        "Mandi_Maxi": {"0": 1.3, "1": 1.0}
       },
       "interactions": [
-        { "name": "CompleteBony+History", "conditions": {"Impaction_Depth": [3], "Diabetes": [1]}, "mult": 1.15 }
+        { "name": "CompleteBony+History", "conditions": {"Impaction_Depth": [3], "Diabetes": [1]}, "mult": 3.0 }
       ],
       "surgery_modifiers": {
-      "1": 0.95,
-      "2": 1.05,
-      "3": 1.00
+      "1": 0.45,
+      "2": 1.9,
+      "3": 0.7
       },
       "notes": "Infection rate 1–5%, higher for bony impaction, cysts, or poor host status.",
       "references": [
@@ -50,25 +49,25 @@
       ]
     },
     "NerveDysesthesia": {
-      "base_incidence": 0.005,
+      "base_incidence": 0.003,
       "risk_modifiers": {
-        "Impaction_Depth": { "1": 0.5, "2": 1.2, "3": 2.2 },
-        "Proximity_Nerve": { "0": 0.3, "1": 1.3 },
-        "Tooth_Angulation": { "2": 1.3 }, 
+        "Impaction_Depth": { "1": 0.5, "2": 1.2, "3": 3.0 },
+        "Proximity_Nerve": { "0": 0.3, "1": 2.5 },
+        "Tooth_Angulation": { "2": 2.0 }, 
         "Age": [
           {"min": 12, "max": 24, "mult": 0.9},
           {"min": 25, "max": 34, "mult": 1.1},
-          {"min": 35, "max": 120, "mult": 1.3}
+          {"min": 35, "max": 120, "mult": 2.0}
         ],
         "Mandi_Maxi": {"0": 2.0, "1": 0.0}
       },
       "interactions": [
-        { "name": "Deep+IAN_Close", "conditions": {"Impaction_Depth": [3], "Proximity_Nerve": [1]}, "mult": 1.5 }
+        { "name": "Deep+IAN_Close", "conditions": {"Impaction_Depth": [3], "Proximity_Nerve": [1]}, "mult": 3.0 }
       ],
       "surgery_modifiers": {
       "1": 1.00,
-      "2": 1.25,
-      "3": 0.11
+      "2": 1.6,
+      "3": 0.30
       },
       "notes": "IAN injury ~0.4–0.6%. Rises with age, depth, mesioangular tilt, and radiographic IAN proximity.",
       "references": [
@@ -77,19 +76,19 @@
       ]
     },
     "Bleeding": {
-      "base_incidence": 0.002,
+      "base_incidence": 0.0008,
       "risk_modifiers": {
-        "Impaction_Depth": { "3": 1.2, "2": 1.1 },
-        "Clotting_Disorder": { "1": 1.8 },
+        "Impaction_Depth": { "2": 1.4, "3": 3.0 },
+        "Clotting_Disorder": { "1": 2.8 },
         "Age": [
-          {"min": 36, "max": 120, "mult": 1.5}
+          {"min": 36, "max": 120, "mult": 3.0}
         ],
-        "Mandi_Maxi": {"0": 1.1, "1": 1.0}
+        "Mandi_Maxi": {"0": 1.4, "1": 1.0}
       },
       "surgery_modifiers": {
-      "1": 0.95,
-      "2": 1.25,
-      "3": 1.05
+      "1": 0.55,
+      "2": 1.8,
+      "3": 1.5
       },
       "notes": "Post-op bleeding ~0.2–0.6%; intra-op bleeding up to 4.8% in older patients. Depth and age main factors.",
       "references": [
