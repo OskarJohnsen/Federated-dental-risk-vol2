@@ -25,17 +25,18 @@ def compute_risk_from_evidence(row: Dict[str, Any], risk_type: str, risk_config:
             adj_mult = max(0.1, min(10.0, adj_mult))
             risk *= adj_mult
 
-    if surgical_decision is not None and "surgery_modifiers" in risk_data:
-        mult = float(get_modifier(risk_data["surgery_modifiers"], surgical_decision))
-        risk *= mult
-
     if risk_type == "NerveDysesthesia":
+        mandi_maxi = get_value(row, "Mandi_Maxi")
+        if mandi_maxi is not None and mandi_maxi == 1:
+            return 0.0
+        
         prox_nerve = get_value(row, "Proximity_Nerve")
         if prox_nerve is not None and prox_nerve == 0:
             risk *= 0.30
-        mandi_maxi = get_value(row, "Mandi_Maxi")
-        if mandi_maxi is not None and mandi_maxi == 1:
-            risk = 0.0
+
+    if surgical_decision is not None and "surgery_modifiers" in risk_data:
+        mult = float(get_modifier(risk_data["surgery_modifiers"], surgical_decision))
+        risk *= mult
 
     result = float(min(1.0, max(0.0, risk)))
     return result
