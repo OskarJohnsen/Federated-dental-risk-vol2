@@ -18,9 +18,9 @@ class MLP(BaseModel):
 
         for hidden_dim in hidden_size:
             layers.append(nn.Linear(input_dim, hidden_dim))
+            layers.append(nn.BatchNorm1d(hidden_dim))
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(dropout))
-            layers.append(nn.BatchNorm1d(hidden_dim))
             input_dim = hidden_dim
         
         self.shared_layers = nn.Sequential(*layers)
