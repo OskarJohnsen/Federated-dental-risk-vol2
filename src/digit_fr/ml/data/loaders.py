@@ -15,7 +15,7 @@ def load_raw_data():
     y_classification = df[target_classification]
 
     # missing indicator # TODO
-    missing_cols = ['Tooth_Mobility', 'PartialBony_GingivalCoverage', 'Bone_Density', 'Surg_2_Subtype']
+    missing_cols = ['Tooth_Mobility', 'Bone_Density']
     for col in missing_cols:
         if col in X.columns:
             missing_indicator_name = f'{col}_MISSING'

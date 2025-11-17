@@ -83,10 +83,6 @@ def generate_dataset(configs: Dict[str, Any]) -> pd.DataFrame:
         ang = _generate_categorical(n, [1, 2, 3, 4, 5], [0.30, 0.40, 0.20, 0.09, 0.01])
         depth = _generate_categorical(n, [1, 2, 3], Depth_probs)
 
-        gingival_cov = np.full(n, np.nan)
-        mask_depth2 = (depth == 2)
-        gingival_cov[mask_depth2] = _generate_binary(mask_depth2.sum(), p=0.60)
-
         prox_nerve = _generate_binary(n, Proximity_p)
         root_count = _generate_categorical(n, [1, 2, 3, 4], [0.1, 0.5, 0.3, 0.1])
         root_curve = _generate_binary(n, 0.70)
@@ -116,7 +112,7 @@ def generate_dataset(configs: Dict[str, Any]) -> pd.DataFrame:
                 "Pain": pain[i], "Swelling": swelling[i], "Trismus": trismus[i], "Pericoronitis": pericoronitis[i],
                 "Caries_Wisdom": caries_w[i], "Caries_Adjacent": caries_adj[i],
                 "Periodontal_Status": perio[i], "Root_Development": root_dev[i], "Tooth_Mobility": mobility[i],
-                "Tooth_Angulation": ang[i], "Impaction_Depth": depth[i], "PartialBony_GingivalCoverage": (None if np.isnan(gingival_cov[i]) else int(gingival_cov[i])),
+                "Tooth_Angulation": ang[i], "Impaction_Depth": depth[i],
                 "Proximity_Nerve": prox_nerve[i],
                 "Root_Count": root_count[i], "Root_Curvature": root_curve[i], "Bone_Density": bone_density[i],
                 "Cyst": cyst[i],
@@ -143,7 +139,7 @@ def generate_dataset(configs: Dict[str, Any]) -> pd.DataFrame:
     temperature = gen["decision_model"]["temperature"]
     noise_sd = gen["decision_model"]["noise_sd"]
 
-    decisions, score1, score2, score3, p1, p2, p3, subtypes = [], [], [], [], [], [], [], []
+    decisions, score1, score2, score3, p1, p2, p3 = [], [], [], [], [], [], []
     removal_decisions, removal_probs = [], []
     alveolar_risks, infection_risks, nerve_risks, bleeding_risks = [], [], [], []
 
@@ -152,14 +148,6 @@ def generate_dataset(configs: Dict[str, Any]) -> pd.DataFrame:
         decisions.append(d)
         score1.append(s[1]); score2.append(s[2]); score3.append(s[3])
         p1.append(p[0]); p2.append(p[1]); p3.append(p[2])
-
-        if d == 2:
-            depth = row["Impaction_Depth"]
-            if depth == 1: subtypes.append(1)
-            elif depth == 2: subtypes.append(2)
-            else: subtypes.append(3)
-        else:
-            subtypes.append(None)
 
         removal_decision, removal_prob = compute_removal_decision(row, binary_cfg)
         removal_decisions.append(removal_decision)
@@ -182,7 +170,6 @@ def generate_dataset(configs: Dict[str, Any]) -> pd.DataFrame:
     df["Surgical_Extraction_Type"] = decisions
     df["Score_1"] = score1; df["Score_2"] = score2; df["Score_3"] = score3
     df["Prob_1"] = p1; df["Prob_2"] = p2; df["Prob_3"] = p3
-    df["Surg_2_Subtype"] = subtypes
 
     df["Removal_Indicated"] = removal_decisions
     df["Removal_Prob"] = removal_probs

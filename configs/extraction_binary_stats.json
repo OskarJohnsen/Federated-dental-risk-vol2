@@ -8,24 +8,19 @@
     "positive_indications": {
       "Pericoronitis": { "1": 2.0 },
   
-      "Caries_Wisdom":   { "1": 2.0 },
+      "Caries_Wisdom": { "1": 2.0 },
       "Caries_Adjacent": { "1": 1.6 },
   
       "Impaction_Depth": {
         "2": 1.2,
         "3": 1.4
       },
-
-      "PartialBony_GingivalCoverage": {
-        "0": 1.00,
-        "1": 1.20
-      },
   
       "Cyst": { "1": 2.2 },
   
-      "Pain":      { "1": 1.6 },
-      "Swelling":  { "1": 1.6 },
-      "Trismus":   { "1": 1.4 }
+      "Pain": { "1": 1.6 },
+      "Swelling": { "1": 1.6 },
+      "Trismus": { "1": 1.4 }
     },
   
     "counter_indications": {
@@ -40,10 +35,10 @@
       },
   
       "Systemic_Risk": {
-        "Diabetes":         { "1": 0.9 },
-        "Osteoporosis":     { "1": 0.85 },
-        "Clotting_Disorder":{ "1": 0.7 },
-        "Bisphosphonates":  { "1": 0.6 }
+        "Diabetes": { "1": 0.9 },
+        "Osteoporosis": { "1": 0.85 },
+        "Clotting_Disorder": { "1": 0.7 },
+        "Bisphosphonates": { "1": 0.6 }
       }
     },
   
@@ -89,8 +84,7 @@
           "Pain": [0],
           "Swelling": [0],
           "Pericoronitis": [0],
-          "Trismus": [0],
-          "PartialBony_GingivalCoverage": [1]
+          "Trismus": [0]
         },
         "mult": 1.4
       }
