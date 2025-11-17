@@ -215,3 +215,5 @@ checkpoints/
 *.pt
 *.pth
 *.ckpt
+
+wandb/
