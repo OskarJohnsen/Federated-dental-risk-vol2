@@ -21,6 +21,7 @@ dependencies = [
 
 [project.scripts]
 digit-fr-generate = "digit_fr.data_generation.cli.generate:run"
+digit-fr-train = "digit_fr.ml.cli:run"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
