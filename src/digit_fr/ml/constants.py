@@ -1,0 +1,1 @@
+RISK_NAMES = ["AlveolarOsteitis", "SecondaryInfection", "NerveDysesthesia", "Bleeding"]

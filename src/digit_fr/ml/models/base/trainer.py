@@ -1,9 +1,10 @@
 from typing import Any, Dict, Optional
 from pathlib import Path
 import torch
+import numpy as np
 from torch.utils.data import DataLoader
-from torchmetrics.functional import accuracy, precision, recall, f1_score, auroc
-from sklearn.metrics import matthews_corrcoef
+from ...constants import RISK_NAMES
+from ...metrics.calc_metrics import model_metrics
 from ....core.paths import root_path, ensure_dir
 from datetime import datetime
 
@@ -73,7 +74,7 @@ class BaseTrainer:
             "checkpoint_path": checkpoint_path,
         }
     
-    def evaluate(self, data_loader) -> Dict[str, float]:
+    def evaluate(self, data_loader, thresholds: Optional[Dict[str, float]] = None) -> Dict[str, float]:
         self.model.eval()
         total_loss_clf = 0.0
         n_samples = 0
@@ -82,6 +83,10 @@ class BaseTrainer:
         all_clf_preds = []
         all_clf_labels = []
         all_clf_probs = []
+        risk_names = RISK_NAMES
+        
+        if thresholds is None:
+            thresholds = {name: 0.5 for name in risk_names}
         
         with torch.no_grad():
             for data in data_loader:
@@ -95,7 +100,11 @@ class BaseTrainer:
                     clf_true = labels["classification"].to(self.device)
                     
                     clf_probs = torch.sigmoid(clf_logits)
-                    clf_preds = (clf_probs > 0.5).float()
+                    
+                    clf_preds = torch.zeros_like(clf_probs)
+                    for i, risk_name in enumerate(risk_names):
+                        threshold = thresholds.get(risk_name, 0.5)
+                        clf_preds[:, i] = (clf_probs[:, i] > threshold).float()
                     
                     all_clf_preds.append(clf_preds)
                     all_clf_labels.append(clf_true)
@@ -112,28 +121,14 @@ class BaseTrainer:
             clf_labels = torch.cat(all_clf_labels)
             clf_probs = torch.cat(all_clf_probs)
             
-            metrics["loss_clf"] = total_loss_clf / n_samples
-            risk_names = ["AlveolarOsteitis", "SecondaryInfection", "NerveDysesthesia", "Bleeding"]
-            n_targets = clf_preds.shape[1]
+            metrics = model_metrics(
+                clf_preds, clf_labels, clf_probs, 
+                total_loss_clf, n_samples, risk_names
+            )
             
-            for i in range(n_targets):
-                risk_pred = clf_preds[:, i]
-                risk_label = clf_labels[:, i].int()
-                risk_prob = clf_probs[:, i]
-                
-                metrics[f"accuracy_risk_{risk_names[i]}"] = accuracy(risk_pred, risk_label, task="binary")
-                metrics[f"precision_risk_{risk_names[i]}"] = precision(risk_pred, risk_label, task="binary")
-                metrics[f"recall_risk_{risk_names[i]}"] = recall(risk_pred, risk_label, task="binary")
-                metrics[f"f1_risk_{risk_names[i]}"] = f1_score(risk_pred, risk_label, task="binary")
-                metrics[f"roc_auc_risk_{risk_names[i]}"] = auroc(risk_prob, risk_label, task="binary")
-                metrics[f"mcc_risk_{risk_names[i]}"] = matthews_corrcoef(risk_label.cpu().numpy(), risk_pred.cpu().numpy())
-            
-            # avg across all risks
-            metrics["accuracy_clf_macro"] = sum([metrics[f"accuracy_risk_{risk_names[i]}"] for i in range(n_targets)]) / n_targets
-            metrics["precision_clf_macro"] = sum([metrics[f"precision_risk_{risk_names[i]}"] for i in range(n_targets)]) / n_targets
-            metrics["recall_clf_macro"] = sum([metrics[f"recall_risk_{risk_names[i]}"] for i in range(n_targets)]) / n_targets
-            metrics["f1_clf_macro"] = sum([metrics[f"f1_risk_{risk_names[i]}"] for i in range(n_targets)]) / n_targets
-            metrics["roc_auc_clf_macro"] = sum([metrics[f"roc_auc_risk_{risk_names[i]}"] for i in range(n_targets)]) / n_targets
+            metrics["_probs"] = clf_probs.cpu().numpy()
+            metrics["_labels"] = clf_labels.cpu().numpy()
+            metrics["_risk_names"] = risk_names
         
         return metrics
     
