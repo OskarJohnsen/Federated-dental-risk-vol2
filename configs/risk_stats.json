@@ -49,7 +49,7 @@
       ]
     },
     "NerveDysesthesia": {
-      "base_incidence": 0.005,
+      "base_incidence": 0.006,
       "risk_modifiers": {
         "Impaction_Depth": { "1": 0.5, "2": 1.2, "3": 3.0 },
         "Proximity_Nerve": { "0": 0.3, "1": 2.5 },
@@ -78,19 +78,19 @@
     "Bleeding": {
       "base_incidence": 0.0008,
       "risk_modifiers": {
-        "Impaction_Depth": { "2": 1.4, "3": 3.0 },
-        "Clotting_Disorder": { "1": 2.8 },
+        "Impaction_Depth": { "2": 1.9, "3": 3.5 },
+        "Clotting_Disorder": { "1": 3.8 },
         "Age": [
-          {"min": 36, "max": 120, "mult": 3.0}
+          {"min": 36, "max": 120, "mult": 3.5}
         ],
-        "Mandi_Maxi": {"0": 1.4, "1": 1.0}
+        "Mandi_Maxi": {"0": 1.7, "1": 1.0}
       },
       "interactions": [
         { "name": "Deep+Old_Patient", "conditions": {"Impaction_Depth": [3], "Age": { "min": 36, "max": 120 }}, "mult": 5.0 }
       ],
       "surgery_modifiers": {
       "1": 0.55,
-      "2": 2.5,
+      "2": 3.5,
       "3": 1.5
       },
       "notes": "Post-op bleeding ~0.2–0.6%; intra-op bleeding up to 4.8% in older patients. Depth and age main factors.",
