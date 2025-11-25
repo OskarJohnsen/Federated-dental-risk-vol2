@@ -20,7 +20,6 @@ def _generate_categorical(n: int, categories, probs) -> np.ndarray:
 def _generate_age(n: int, mu: int = 28, sigma: int = 7, lo: int = 16, hi: int = 60) -> np.ndarray:
     return np.clip(np.random.normal(loc=mu, scale=sigma, size=n).astype(int), lo, hi)
 
-# moved otseo and bisphos outside of loop
 def prob_osteoporosis_given_age_sex(age: int, sex: int) -> float:
             if sex == 0:
                 if age < 40: return 0.002
