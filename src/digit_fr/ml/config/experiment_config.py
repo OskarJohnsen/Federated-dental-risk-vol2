@@ -131,4 +131,4 @@ class ExperimentConfig:
         return f"{self.experiment_type}_{self.model}_seed{self.model_seed}"
     
     def get_group_name(self) -> str:
-        return f"{self.experiment_id}_seed{self.model_seed}"
+        return f"{self.experiment_id}_{self.experiment_type}_seed{self.model_seed}"
