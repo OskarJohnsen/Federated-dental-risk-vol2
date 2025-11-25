@@ -22,7 +22,7 @@ def main(config: ExperimentConfig):
         project="digit-federated-recommenders",
         name=config.get_run_name(),
         config=config.to_wandb_config(),
-        tags=[config.experiment_type, config.model, f"seed{config.model_seed}"],
+        tags=[config.experiment_type, config.model, f"seed{config.model_seed}", config.threshold_method],
         group=config.get_group_name(),
         job_type=config.experiment_type,
     )
