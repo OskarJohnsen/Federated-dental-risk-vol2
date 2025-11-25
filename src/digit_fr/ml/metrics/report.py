@@ -1,20 +1,45 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import numpy as np
 import wandb
+import torch
+from ..config.experiment_config import ExperimentConfig
 from sklearn.metrics import f1_score
 from ..constants import RISK_NAMES
 
-def log_metrics_wandb(metrics: Dict[str, Any], prefix: str = "test/"):
+def log_metrics_wandb(metrics: Dict[str, Any], prefix: str = "test/", epoch: Optional[int] = None):
     metrics_to_log = {}
     for metric_name, metric_value in metrics.items():
         if metric_name.startswith('_'):
             continue
         if isinstance(metric_value, (int, float)) and not np.isnan(metric_value):
-            metrics_to_log[f"{prefix}{metric_name}"] = float(metric_value)
+            if prefix and not metric_name.startswith(('train/', 'val/', 'test/')):
+                metrics_to_log[f"{prefix}{metric_name}"] = float(metric_value)
+            else:
+                metrics_to_log[metric_name] = float(metric_value)
+    
+    if epoch is not None:
+        metrics_to_log["epoch"] = epoch
     
     wandb.log(metrics_to_log)
 
-def print_dataset_metrics(dataset_metrics_dict: Dict[str, Any], risk_names: list = None):
+def log_experiment_config(config: ExperimentConfig, model: torch.nn.Module, class_weights: Optional[torch.Tensor] = None):
+    config_updates = {}
+    
+    if config.data_version is not None:
+        config_updates["data_version"] = config.data_version
+    
+    if config.input_size is not None:
+        config_updates["input_size"] = config.input_size
+    
+    config_updates["model/total_parameters"] = sum(p.numel() for p in model.parameters())
+    
+    if class_weights is not None:
+        config_updates["class_weights"] = class_weights.tolist()
+    
+    if config_updates:
+        wandb.config.update(config_updates)
+
+def log_dataset_info(dataset_metrics_dict: Dict[str, Any], risk_names: list = None):
     if risk_names is None:
         risk_names = RISK_NAMES
     
@@ -36,10 +61,14 @@ def print_dataset_metrics(dataset_metrics_dict: Dict[str, Any], risk_names: list
             pos_count = dataset_metrics_dict[test_count_key]
             pos_ratio = dataset_metrics_dict[test_ratio_key]
             print(f"Test - {risk_col}: {pos_count} positives ({pos_ratio:.4f})")
+    
+    wandb.log(dataset_metrics_dict)
 
-def print_thresholds(optimized_thresholds: Dict[str, float], val_probs: np.ndarray, val_labels: np.ndarray, risk_names: list = None, method: str = "f1"):
+def log_thresholds(optimized_thresholds: Dict[str, float], val_probs: np.ndarray, val_labels: np.ndarray, risk_names: list = None, method: str = "f1"):
     if risk_names is None:
         risk_names = RISK_NAMES
+    
+    threshold_metrics = {}
     
     for idx, risk_name in enumerate(risk_names):
         if risk_name in optimized_thresholds:
@@ -60,11 +89,9 @@ def print_thresholds(optimized_thresholds: Dict[str, float], val_probs: np.ndarr
             else:
                 best_f1 = f1_score(y_true, preds, zero_division=0)
                 print(f"{risk_name}: threshold={best_thr:.4f}, f1={best_f1:.4f}")
-
-def log_thresholds_wandb(optimized_thresholds: Dict[str, float]):
-    threshold_metrics = {}
-    for risk_name, threshold in optimized_thresholds.items():
-        threshold_metrics[f"threshold/{risk_name}"] = threshold
+            
+            threshold_metrics[f"threshold/{risk_name}"] = best_thr
+    
     wandb.log(threshold_metrics)
 
 def metrics_summary(final_metrics: Dict[str, Any]):

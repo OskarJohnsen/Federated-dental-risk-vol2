@@ -4,6 +4,9 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
+from ..util.seed import data_seeds
+from typing import Optional
+from ..config.experiment_config import ExperimentConfig
 
 def load_raw_data():
     df = pd.read_csv(root_path('data', 'raw', 'fed_recommenders_synthetic_dataset.csv'))
@@ -24,13 +27,20 @@ def load_raw_data():
     return {'X': X, 'y_classification': y_classification}
 
 
-def load_data_with_split(test_size=0.2, val_size=0.2, random_state=42):
+def load_data_with_split(test_size=0.2, val_size=0.2, data_split_seed=42, config: Optional[ExperimentConfig] = None):
+    if config is not None:
+        data_split_seed = config.data_split_seed
+        test_size = config.test_size
+        val_size = config.val_size
+
+    data_seeds(data_split_seed)
+
     data = load_raw_data()
 
-    X_temp, X_test, y_temp, y_test = train_test_split(data['X'],data['y_classification'],test_size=test_size,random_state=random_state,)
+    X_temp, X_test, y_temp, y_test = train_test_split(data['X'],data['y_classification'],test_size=test_size,random_state=data_split_seed,)
 
     val_size_adjusted = val_size / (1 - test_size)
-    X_train, X_val, y_train, y_val = train_test_split(X_temp,y_temp,test_size=val_size_adjusted,random_state=random_state,)
+    X_train, X_val, y_train, y_val = train_test_split(X_temp,y_temp,test_size=val_size_adjusted,random_state=data_split_seed,)
 
     features_to_onehot = ['Surgical_Extraction_Type', 'Tooth_Angulation']
     categorical_cols = [c for c in features_to_onehot if c in X_train.columns]
