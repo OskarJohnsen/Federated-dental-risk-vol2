@@ -145,13 +145,12 @@ risk = base_incidence × ∏(risk_modifiers) × ∏(interactions) × surgery_mod
 **Example Calculation** (Alveolar Osteitis with worst case symptoms):
 ```
 base_incidence = 0.02
-Impaction_Depth = 3 → multiplier = 1.4
+Impaction_Depth = 1 → multiplier = 1.0
 Pericoronitis = 1 → multiplier = 1.4
 Age = 30 → multiplier = 1.8 (age range 25-34)
-Interaction (Deep+Pericoronitis) → multiplier = 3.0
-Surgical_Extraction_Type = 2 → multiplier = 1.95
+Surgical_Extraction_Type = 1 → multiplier = 0.70
 
-risk = 0.02 × 1.4 × 1.4 × 1.8 × 3.0 × 1.95 = 0.412 (41.2%)
+risk = 0.02 × 1.0 × 1.4 × 1.8 × 0.70 = 0.03528 (3.52%)
 ```
 
 #### Step 5: Bernoulli Draw (Binary Outcome Generation)
