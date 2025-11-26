@@ -142,7 +142,7 @@ risk = base_incidence × ∏(risk_modifiers) × ∏(interactions) × surgery_mod
    - **Nerve Dysesthesia**: If nerve proximity is absent, multiply by 0.30
 6. **Clamp**: Ensure risk is between 0.0 and 1.0
 
-**Example Calculation** (Alveolar Osteitis with worst case symptoms):
+**Example Calculation** (Alveolar Osteitis):
 ```
 base_incidence = 0.02
 Impaction_Depth = 1 → multiplier = 1.0
