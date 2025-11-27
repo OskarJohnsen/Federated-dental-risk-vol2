@@ -141,8 +141,9 @@ def generate_dataset(configs: Dict[str, Any]) -> pd.DataFrame:
     decisions, score1, score2, score3, p1, p2, p3 = [], [], [], [], [], [], []
     removal_decisions, removal_probs = [], []
     alveolar_risks, infection_risks, nerve_risks, bleeding_risks = [], [], [], []
+    alveolar_risk_probs, infection_risk_probs, nerve_risk_probs, bleeding_risk_probs = [], [], [], []
 
-    for _, row in tqdm(df.iterrows(), total=len(df), desc="Computing decisions and risks"):
+    for row in tqdm(df.itertuples(index=False), total=len(df), desc="Computing decisions and risks"):
         d, s, p = decide_row(row, extraction_cfg, client_profiles, temperature, noise_sd)
         decisions.append(d)
         score1.append(s[1]); score2.append(s[2]); score3.append(s[3])
@@ -162,9 +163,13 @@ def generate_dataset(configs: Dict[str, Any]) -> pd.DataFrame:
         bleeding_risk_binary = int(np.random.rand() < bleeding_risk)
 
         alveolar_risks.append(alveolar_risk_binary)
+        alveolar_risk_probs.append(alveolar_risk)
         infection_risks.append(infection_risk_binary)
+        infection_risk_probs.append(infection_risk)
         nerve_risks.append(nerve_risk_binary)
+        nerve_risk_probs.append(nerve_risk)
         bleeding_risks.append(bleeding_risk_binary)
+        bleeding_risk_probs.append(bleeding_risk)
 
     df["Surgical_Extraction_Type"] = decisions
     df["Score_1"] = score1; df["Score_2"] = score2; df["Score_3"] = score3
@@ -173,8 +178,12 @@ def generate_dataset(configs: Dict[str, Any]) -> pd.DataFrame:
     df["Removal_Indicated"] = removal_decisions
     df["Removal_Prob"] = removal_probs
     df["Risk_AlveolarOsteitis"] = alveolar_risks
+    df["Risk_AlveolarOsteitis_Prob"] = alveolar_risk_probs
     df["Risk_SecondaryInfection"] = infection_risks
+    df["Risk_SecondaryInfection_Prob"] = infection_risk_probs
     df["Risk_NerveDysesthesia"] = nerve_risks
+    df["Risk_NerveDysesthesia_Prob"] = nerve_risk_probs
     df["Risk_Bleeding"] = bleeding_risks
+    df["Risk_Bleeding_Prob"] = bleeding_risk_probs
 
     return df

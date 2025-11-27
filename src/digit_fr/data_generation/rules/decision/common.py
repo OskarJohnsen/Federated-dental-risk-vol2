@@ -16,10 +16,13 @@ def _norm_key(v: Any) -> str | None:
         return str(v)
     return str(v)
 
-def get_value(row: Dict[str, Any], feature: str) -> Any | None:
-    if feature not in row:
+def get_value(row, feature: str) -> Any | None:
+    if hasattr(row, feature):
+        val = getattr(row, feature)
+    elif isinstance(row, dict) and feature in row:
+        val = row[feature]
+    else:
         return None
-    val = row[feature]
     if val is None or (isinstance(val, float) and math.isnan(val)):
         return None
     return val
@@ -39,20 +42,19 @@ def get_modifier(modifiers: Any, value: Any) -> float:
         return float(modifiers[key])
     return 1.0
 
-def check_condition_match(row: Dict[str, Any], feature: str, expected_values: Any) -> bool:
-    if feature not in row or row[feature] is None or (isinstance(row[feature], float) and math.isnan(row[feature])):
+def check_condition_match(row, feature: str, expected_values: Any) -> bool:
+    v = get_value(row, feature)
+    if v is None or (isinstance(v, float) and math.isnan(v)):
         return False
-    val_key = _norm_key(row[feature])
+    val_key = _norm_key(v)
 
     if isinstance(expected_values, dict) and "min" in expected_values and "max" in expected_values:
-        v = row[feature]
         return expected_values["min"] <= v <= expected_values["max"]
 
     if isinstance(expected_values, list) and len(expected_values) > 0:
         for token in expected_values:
             if isinstance(token, str) and any(op in token for op in [">=", "<=", "==", "!=", ">", "<"]):
                 s = token.strip()
-                v = row[feature]
                 # Check multi-char operators first to avoid substring conflicts
                 if s.startswith(">="):
                     try:

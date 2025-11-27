@@ -58,7 +58,8 @@ def compute_scores_row(row: Dict[str, Any], extraction_cfg: Dict[str, Any], clie
     s = apply_rule_category(row, s, "ian_proximity_rules", extraction_cfg)
     s = apply_rule_category(row, s, "symptom_interactions", extraction_cfg)
 
-    scales = client_profiles.get(int(row["Client"]), {}).get("score_scale", {})
+    client_id = get_value(row, "Client")
+    scales = client_profiles.get(int(client_id) if client_id is not None else 0, {}).get("score_scale", {})
     for k in s:
         s[k] *= float(scales.get(k, 1.0))
     return s

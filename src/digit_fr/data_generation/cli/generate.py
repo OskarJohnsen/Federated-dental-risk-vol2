@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 import typer
 import numpy as np
-from ..config_loader import load_all_configs
+from ..config.loader import load_all_configs
 from ..generation.synth import generate_dataset
 from ...core.paths import ensure_dir, root_path
 
