@@ -17,6 +17,7 @@ dist/
 downloads/
 eggs/
 .eggs/
+
 lib/
 lib64/
 parts/
@@ -215,5 +216,5 @@ checkpoints/
 *.pt
 *.pth
 *.ckpt
-
+data/raw/
 wandb/
