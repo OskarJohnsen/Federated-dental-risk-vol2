@@ -26,20 +26,28 @@ class MultiTaskDataset:
 
 def create_data_loaders(data, batch_size=32, shuffle_train=True):
     train_dataset = MultiTaskDataset(data['train']['X'], data['train']['y_classification'])
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle_train)
+    train_size = len(train_dataset)
+    effective_batch_size = min(batch_size, train_size)
+    drop_last = train_size > effective_batch_size
+    
+    train_loader = DataLoader(train_dataset, batch_size=effective_batch_size, shuffle=shuffle_train, drop_last=drop_last)
     
     loaders = [train_loader]
     
     if 'val' in data:
         val_dataset = MultiTaskDataset(data['val']['X'], data['val']['y_classification'])
-        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+        val_size = len(val_dataset)
+        val_batch_size = min(batch_size, val_size) if val_size > 0 else batch_size
+        val_loader = DataLoader(val_dataset, batch_size=val_batch_size, shuffle=False, drop_last=False)
         loaders.append(val_loader)
     
     if 'test' in data:
         y_test_probs = data['test'].get('y_probabilities', None)
         y_test_categories = data['test'].get('y_categories', None)
         test_dataset = MultiTaskDataset(data['test']['X'], data['test']['y_classification'], y_probabilities=y_test_probs, y_categories=y_test_categories)
-        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+        test_size = len(test_dataset)
+        test_batch_size = min(batch_size, test_size) if test_size > 0 else batch_size
+        test_loader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=False, drop_last=False)
         loaders.append(test_loader)
     
     if len(loaders) == 3:
