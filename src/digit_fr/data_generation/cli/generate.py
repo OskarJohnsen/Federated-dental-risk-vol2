@@ -22,7 +22,7 @@ def main(
     else:
         np.random.seed(configs["generation"]["dataset"]["random_seed"])
 
-    df = generate_dataset(configs)
+    df, global_thresholds = generate_dataset(configs)
 
     cfg_out_dir = configs["generation"]["output"]["output_dir"]
     base = configs["generation"]["output"]["filename_base"]
@@ -43,10 +43,14 @@ def main(
     ensure_dir(out_dir)
 
     fmts = [f.strip() for f in formats.split(",") if f.strip()]
-    if "xlsx" in fmts:
-        df.to_excel(out_dir.joinpath(f"{base}.xlsx"), index=False)
     if "csv" in fmts:
         df.to_csv(out_dir.joinpath(f"{base}.csv"), index=False)
+
+    configs_dir = proj_root.joinpath("configs")
+    ensure_dir(configs_dir)
+    thresholds_path = configs_dir / "global_thresholds.json"
+    with thresholds_path.open("w") as f:
+        json.dump(global_thresholds, f, indent=2)
 
     meta = {
         "rows": int(df.shape[0]),

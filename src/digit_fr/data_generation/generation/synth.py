@@ -38,7 +38,7 @@ def prob_bisphosphonates_given_age_osteoporosis(age: int, has_osteoporosis: bool
             else:
                 return 0.003
 
-def generate_dataset(configs: Dict[str, Any]) -> pd.DataFrame:
+def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, Dict[str, float]]]:
     gen = configs["generation"]
     extraction_cfg = configs["extraction_types"]
     binary_cfg = configs["extraction_binary"]
@@ -186,4 +186,36 @@ def generate_dataset(configs: Dict[str, Any]) -> pd.DataFrame:
     df["Risk_Bleeding"] = bleeding_risks
     df["Risk_Bleeding_Prob"] = bleeding_risk_probs
 
-    return df
+    # cats: 0 = low, 1 = medium, 2 = high
+    risk_prob_columns = {
+        "AlveolarOsteitis": "Risk_AlveolarOsteitis_Prob",
+        "SecondaryInfection": "Risk_SecondaryInfection_Prob",
+        "NerveDysesthesia": "Risk_NerveDysesthesia_Prob",
+        "Bleeding": "Risk_Bleeding_Prob"
+    }
+    
+    global_thresholds = {}
+    
+    for risk_name, prob_col in risk_prob_columns.items():
+        prob_values = df[prob_col].values
+        p33 = np.percentile(prob_values, 33)
+        p67 = np.percentile(prob_values, 67)
+        
+        categories = np.where(prob_values < p33, 0, np.where(prob_values < p67, 1, 2)).astype(int)
+        
+        category_col = f"Risk_Category_{risk_name}"
+        df[category_col] = categories
+        
+        global_thresholds[risk_name] = {
+            "low_medium": float(p33),
+            "medium_high": float(p67)
+        }
+        
+        n_low = (categories == 0).sum()
+        n_med = (categories == 1).sum()
+        n_high = (categories == 2).sum()
+        print(f"{risk_name}: Low={n_low} ({n_low/len(categories)*100:.1f}%)")
+        print(f"Medium={n_med} ({n_med/len(categories)*100:.1f}%)")
+        print(f"High={n_high} ({n_high/len(categories)*100:.1f}%)")
+
+    return df, global_thresholds
