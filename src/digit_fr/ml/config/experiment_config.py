@@ -63,6 +63,7 @@ class ExperimentConfig:
     
     # eval
     threshold_method: Literal["f1", "youden"] = "youden"
+    category_strategy: Literal["per_client", "global", "both"] = "both"
     
     # versions
     data_version: Optional[str] = None
@@ -106,6 +107,7 @@ class ExperimentConfig:
             "loss_function": self.loss_function,
             "use_class_weights": self.use_class_weights,
             "threshold_method": self.threshold_method,
+            "category_strategy": self.category_strategy,
         }
         
         if self.input_size is not None:
