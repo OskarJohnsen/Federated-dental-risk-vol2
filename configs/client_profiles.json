@@ -15,7 +15,7 @@
     "missingness": {
       "Tooth_Mobility": 0.10
     },
-    "measurement_noise": 0.01
+    "measurement_noise": 0.03
   },
   "2": {
     "name": "HighReferralClinic",
@@ -31,7 +31,7 @@
       "4": 1.10
     },
     "missingness": {},
-    "measurement_noise": 0.02
+    "measurement_noise": 0.04
   },
   "3": {
     "name": "RuralGeneral",
@@ -49,7 +49,7 @@
     "missingness": {
       "Bone_Density": 0.11
     },
-    "measurement_noise": 0.010
+    "measurement_noise": 0.015
   },
   "4": {
     "name": "OMFS_Experienced",
@@ -65,7 +65,7 @@
       "4": 1.05
     },
     "missingness": {},
-    "measurement_noise": 0.025
+    "measurement_noise": 0.029
   },
   "5": {
     "name": "OlderPopulation",
@@ -80,7 +80,7 @@
       "4": 1.05
     },
     "missingness": {},
-    "measurement_noise": 0.03
+    "measurement_noise": 0.10
   },
   "6": {
     "name": "PrivatePractice",
@@ -96,7 +96,7 @@
       "4": 0.95
     },
     "missingness": {},
-    "measurement_noise": 0.03
+    "measurement_noise": 0.08
   },
   "7": {
     "name": "TeachingHospital",
@@ -115,7 +115,7 @@
       "Tooth_Mobility": 0.10,
       "Bone_Density": 0.05
     },
-    "measurement_noise": 0.03
+    "measurement_noise": 0.05
   },
   "8": {
     "name": "UrbanCommunity",
@@ -133,7 +133,7 @@
     "missingness": {
       "Bone_Density": 0.05
     },
-    "measurement_noise": 0.03
+    "measurement_noise": 0.04
   },
   "9": {
     "name": "PublicHealthClinic",
@@ -152,7 +152,7 @@
       "Tooth_Mobility": 0.10,
       "Bone_Density": 0.15
     },
-    "measurement_noise": 0.04
+    "measurement_noise": 0.08
   },
   "10": {
     "name": "SuburbanGeneral",
@@ -170,6 +170,6 @@
     "missingness": {
       "Tooth_Mobility": 0.10
     },
-    "measurement_noise": 0.03
+    "measurement_noise": 0.09
   }
 }
