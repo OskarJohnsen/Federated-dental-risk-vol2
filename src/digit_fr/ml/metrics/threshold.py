@@ -78,10 +78,6 @@ def percentile_thresholds(val_probs: np.ndarray, percentiles: list = [33, 67], r
             if len(sorted_percentiles) == 2:
                 risk_thresholds["low_medium_boundary"] = float(percentile_values[0])
                 risk_thresholds["medium_high_boundary"] = float(percentile_values[1])
-            elif len(sorted_percentiles) == 3:
-                risk_thresholds["low_medium_boundary"] = float(percentile_values[0])
-                risk_thresholds["medium_high_boundary"] = float(percentile_values[1])
-                risk_thresholds["high_boundary"] = float(percentile_values[2])
             else:
                 for i, pct in enumerate(sorted_percentiles):
                     risk_thresholds[f"percentile_{pct}"] = float(percentile_values[i])
