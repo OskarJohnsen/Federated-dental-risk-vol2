@@ -30,14 +30,6 @@
     }
   },
   "anatomy_rules": {
-    "Mandi_Maxi_0": {
-      "conditions": {"Mandi_Maxi": [0]},
-      "effects": {"1": -0.25, "2": 0.35, "3": 0.2}
-    },
-    "Mandi_Maxi_1": {
-      "conditions": {"Mandi_Maxi": [1]},
-      "effects": {"1": 0.5, "2": -0.2, "3": -0.50}
-    },
     "Impaction_Depth_1": {
       "conditions": {"Impaction_Depth": [1]},
       "effects": {"2": 0.25}

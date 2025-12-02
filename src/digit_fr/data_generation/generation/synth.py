@@ -66,7 +66,6 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
 
         age = _generate_age(n, mu=Age_mu)
         sex = _generate_binary(n, 0.5)
-        mandibular_maxillary = _generate_binary(n, 0.48)
 
         pain = _generate_binary(n, 0.5)
         swelling = _generate_binary(n, 0.30)
@@ -107,7 +106,7 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
         for i in range(n):
             rows.append({
                 "Client": c, "Patient": i + 1,
-                "Age": age[i], "Sex": sex[i], "Mandi_Maxi": mandibular_maxillary[i],
+                "Age": age[i], "Sex": sex[i],
                 "Pain": pain[i], "Swelling": swelling[i], "Trismus": trismus[i], "Pericoronitis": pericoronitis[i],
                 "Caries_Wisdom": caries_w[i], "Caries_Adjacent": caries_adj[i],
                 "Periodontal_Status": perio[i], "Root_Development": root_dev[i], "Tooth_Mobility": mobility[i],
