@@ -1,9 +1,45 @@
 from typing import Dict, Any
 import torch
 import numpy as np
+import pandas as pd
 from torchmetrics.functional import accuracy, precision, recall, f1_score, auroc
-from sklearn.metrics import matthews_corrcoef, brier_score_loss, average_precision_score
+from sklearn.metrics import matthews_corrcoef, brier_score_loss, average_precision_score, confusion_matrix
+from sklearn.metrics import f1_score as sk_f1_score
 from ..constants import RISK_NAMES
+
+# How often do clinics disagree? -> percent
+def inconsistency_any(categories: np.ndarray) -> float:
+    n, k = categories.shape
+    pairs = [(a, b) for a in range(k) for b in range(a+1, k)]
+    total = n * len(pairs)
+    disagreement = 0
+    for a, b in pairs:
+        disagreement += np.sum(categories[:, a] != categories[:, b])
+    return disagreement / total
+
+# When they disagree, how severe is the disagreement? -> percent of max_disagreement (if cats = low, medium, high then max_disagreement = high - low = 2)
+def inconsistency_distance(categories: np.ndarray) -> float:
+    n, k = categories.shape
+    pairs = [(a, b) for a in range(k) for b in range(a+1, k)]
+    max_disagreement = categories.max() - categories.min()
+    if max_disagreement == 0:
+        return 0.0
+
+    total = n * len(pairs) * max_disagreement
+    dist_sum = 0
+    for a, b in pairs:
+        dist_sum += np.abs(categories[:, a] - categories[:, b]).sum()
+    return dist_sum / total
+
+# What proportion of patients would potentially receive at least one different risk category depending on which clinic they go to?
+def patient_disagreement(categories: np.ndarray) -> float:
+    n, _ = categories.shape
+    all_same = np.all(categories == categories[:, [0]], axis=1)
+
+    num_disagree_patients = np.sum(~all_same)
+    n = categories.shape[0]
+
+    return num_disagree_patients / n
 
 def ece(probs: np.ndarray, labels: np.ndarray, n_bins: int = 10) -> float:
     bin_boundaries = np.linspace(0, 1, n_bins + 1)
@@ -19,6 +55,23 @@ def ece(probs: np.ndarray, labels: np.ndarray, n_bins: int = 10) -> float:
             accuracy_bin = labels[in_bin].mean()
             avg_confidence_bin = probs[in_bin].mean()
             ece += np.abs(avg_confidence_bin - accuracy_bin) * prop_bin
+    
+    return float(ece)
+
+def ece_probability(pred_probs: np.ndarray, true_probs: np.ndarray, n_bins: int = 10) -> float:
+    bin_boundaries = np.linspace(0, 1, n_bins + 1)
+    bin_lowers = bin_boundaries[:-1]
+    bin_uppers = bin_boundaries[1:]
+    
+    ece = 0.0
+    for bin_lower, bin_upper in zip(bin_lowers, bin_uppers):
+        in_bin = (pred_probs > bin_lower) & (pred_probs <= bin_upper)
+        prop_bin = in_bin.mean()
+        
+        if prop_bin > 0:
+            avg_pred_prob = pred_probs[in_bin].mean()
+            avg_true_prob = true_probs[in_bin].mean()
+            ece += np.abs(avg_pred_prob - avg_true_prob) * prop_bin
     
     return float(ece)
 
@@ -108,3 +161,156 @@ def dataset_metrics(data: Dict[str, Any], y_train, y_test, risk_names: list = No
             dataset_metrics[f"dataset/test_{risk_col}_positive_ratio"] = float(pos_ratio)
     
     return dataset_metrics
+
+def model_metrics_probability(clf_probs: torch.Tensor, clf_true_probs: torch.Tensor, risk_names: list = None) -> Dict[str, Any]:
+    if risk_names is None:
+        risk_names = RISK_NAMES
+    
+    metrics = {}
+    n_targets = clf_probs.shape[1]
+    
+    for i in range(n_targets):
+        pred_prob = clf_probs[:, i]
+        true_prob = clf_true_probs[:, i]
+        
+        pred_prob_np = pred_prob.cpu().numpy()
+        true_prob_np = true_prob.cpu().numpy()
+        
+        pred_prob_np = np.clip(pred_prob_np, 0.0, 1.0)
+        true_prob_np = np.clip(true_prob_np, 0.0, 1.0)
+        
+        mse = np.mean((pred_prob_np - true_prob_np) ** 2)
+        metrics[f"mse_risk_{risk_names[i]}"] = float(mse)
+        
+        mae = np.mean(np.abs(pred_prob_np - true_prob_np))
+        metrics[f"mae_risk_{risk_names[i]}"] = float(mae)
+        
+        metrics[f"brier_score_prob_risk_{risk_names[i]}"] = float(mse)
+        
+        ece_value = ece_probability(pred_prob_np, true_prob_np, n_bins=10)
+        metrics[f"ece_prob_risk_{risk_names[i]}"] = ece_value
+    
+    mse_scores = [metrics[f"mse_risk_{risk_names[i]}"] for i in range(n_targets)]
+    mae_scores = [metrics[f"mae_risk_{risk_names[i]}"] for i in range(n_targets)]
+    brier_scores = [metrics[f"brier_score_prob_risk_{risk_names[i]}"] for i in range(n_targets)]
+    ece_scores = [metrics[f"ece_prob_risk_{risk_names[i]}"] for i in range(n_targets)]
+    
+    metrics["mse_macro"] = np.mean(mse_scores)
+    metrics["mae_macro"] = np.mean(mae_scores)
+    metrics["brier_score_prob_macro"] = np.mean(brier_scores)
+    metrics["ece_prob_macro"] = np.mean(ece_scores)
+    
+    return metrics
+
+def model_metrics_categories(pred_categories: np.ndarray, true_categories: np.ndarray, risk_names: list = None, prefix: str = "category") -> Dict[str, Any]:
+    if risk_names is None:
+        risk_names = RISK_NAMES
+    
+    metrics = {}
+    n_targets = pred_categories.shape[1] if len(pred_categories.shape) > 1 else 1
+    
+    if len(pred_categories.shape) == 1:
+        pred_categories = pred_categories.reshape(-1, 1)
+        true_categories = true_categories.reshape(-1, 1)
+        risk_names = [risk_names[0]] if isinstance(risk_names, list) else [risk_names]
+    
+    for i in range(n_targets):
+        pred_cat = pred_categories[:, i]
+        true_cat = true_categories[:, i]
+        
+        acc = (pred_cat == true_cat).mean()
+        metrics[f"{prefix}_accuracy_risk_{risk_names[i]}"] = float(acc)
+        
+        f1_macro = sk_f1_score(true_cat, pred_cat, average='macro', zero_division=0)
+        f1_micro = sk_f1_score(true_cat, pred_cat, average='micro', zero_division=0)
+        f1_weighted = sk_f1_score(true_cat, pred_cat, average='weighted', zero_division=0)
+        
+        metrics[f"{prefix}_f1_macro_risk_{risk_names[i]}"] = float(f1_macro)
+        metrics[f"{prefix}_f1_micro_risk_{risk_names[i]}"] = float(f1_micro)
+        metrics[f"{prefix}_f1_weighted_risk_{risk_names[i]}"] = float(f1_weighted)
+        
+        cm = confusion_matrix(true_cat, pred_cat, labels=[0, 1, 2])
+        
+        for class_idx, class_name in enumerate(['low', 'medium', 'high']):
+            if class_idx < len(cm):
+                tp = cm[class_idx, class_idx]
+                fp = cm[:, class_idx].sum() - tp
+                fn = cm[class_idx, :].sum() - tp
+                
+                if (tp + fp) > 0:
+                    precision_class = tp / (tp + fp)
+                    recall_class = tp / (tp + fn)
+                else:
+                    precision_class = 0.0
+                    recall_class = 0.0
+
+                if (precision_class + recall_class) > 0:
+                    f1_class = 2 * (precision_class * recall_class) / (precision_class + recall_class)
+                else:
+                    f1_class = 0.0
+
+                metrics[f"{prefix}_precision_{class_name}_risk_{risk_names[i]}"] = float(precision_class)
+                metrics[f"{prefix}_recall_{class_name}_risk_{risk_names[i]}"] = float(recall_class)
+                metrics[f"{prefix}_f1_{class_name}_risk_{risk_names[i]}"] = float(f1_class)
+        
+        metrics[f"{prefix}_confusion_matrix_risk_{risk_names[i]}"] = cm.flatten().tolist()
+    
+    acc_scores = [metrics[f"{prefix}_accuracy_risk_{risk_names[i]}"] for i in range(n_targets)]
+    f1_macro_scores = [metrics[f"{prefix}_f1_macro_risk_{risk_names[i]}"] for i in range(n_targets)]
+    f1_micro_scores = [metrics[f"{prefix}_f1_micro_risk_{risk_names[i]}"] for i in range(n_targets)]
+    f1_weighted_scores = [metrics[f"{prefix}_f1_weighted_risk_{risk_names[i]}"] for i in range(n_targets)]
+    
+    metrics[f"{prefix}_accuracy_macro"] = np.mean(acc_scores)
+    metrics[f"{prefix}_f1_macro_macro"] = np.mean(f1_macro_scores)
+    metrics[f"{prefix}_f1_micro_macro"] = np.mean(f1_micro_scores)
+    metrics[f"{prefix}_f1_weighted_macro"] = np.mean(f1_weighted_scores)
+    
+    return metrics
+
+def compute_consistency_metrics(categorizations: Dict[Any, np.ndarray],  prefix: str = "consistency", risk_names: list = None, client_ids: list = None) -> Dict[str, Any]:
+    if risk_names is None:
+        risk_names = RISK_NAMES
+    
+    if client_ids is None:
+        client_ids = sorted(categorizations.keys())
+    
+    if len(client_ids) < 2:
+        return {}
+    
+    metrics = {}
+    n_risks = len(risk_names)
+    
+    for risk_idx, risk_name in enumerate(risk_names):
+        risk_categories_list = []
+        for client_id in client_ids:
+            if client_id in categorizations:
+                cat_list = categorizations[client_id]
+                if len(cat_list.shape) == 2:
+                    risk_categories_list.append(cat_list[:, risk_idx])
+                else:
+                    risk_categories_list.append(cat_list)
+        
+        if len(risk_categories_list) < 2:
+            continue
+        
+        risk_categories = np.stack(risk_categories_list, axis=1)
+        
+        inconsistency_any_score = inconsistency_any(risk_categories)
+        inconsistency_dist_score = inconsistency_distance(risk_categories)
+        patient_disagree_score = patient_disagreement(risk_categories)
+        
+        metrics[f"{prefix}/inconsistency_any_risk_{risk_name}"] = float(inconsistency_any_score)
+        metrics[f"{prefix}/inconsistency_distance_risk_{risk_name}"] = float(inconsistency_dist_score)
+        metrics[f"{prefix}/patient_disagreement_risk_{risk_name}"] = float(patient_disagree_score)
+    
+    if metrics:
+        inconsistency_any_scores = [metrics[f"{prefix}/inconsistency_any_risk_{risk_name}"] for risk_name in risk_names if f"{prefix}/inconsistency_any_risk_{risk_name}" in metrics]
+        inconsistency_dist_scores = [metrics[f"{prefix}/inconsistency_distance_risk_{risk_name}"] for risk_name in risk_names if f"{prefix}/inconsistency_distance_risk_{risk_name}" in metrics]
+        patient_disagree_scores = [metrics[f"{prefix}/patient_disagreement_risk_{risk_name}"] for risk_name in risk_names if f"{prefix}/patient_disagreement_risk_{risk_name}" in metrics]
+        
+        if inconsistency_any_scores:
+            metrics[f"{prefix}/inconsistency_any_macro"] = float(np.mean(inconsistency_any_scores))
+            metrics[f"{prefix}/inconsistency_distance_macro"] = float(np.mean(inconsistency_dist_scores))
+            metrics[f"{prefix}/patient_disagreement_macro"] = float(np.mean(patient_disagree_scores))
+    
+    return metrics

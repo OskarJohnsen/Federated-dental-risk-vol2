@@ -4,7 +4,7 @@ import torch
 import numpy as np
 from torch.utils.data import DataLoader
 from ...constants import RISK_NAMES
-from ...metrics.calc_metrics import model_metrics
+from ...metrics.calc_metrics import model_metrics, model_metrics_probability
 from ....core.paths import root_path, ensure_dir
 from datetime import datetime
 
@@ -83,6 +83,8 @@ class BaseTrainer:
         all_clf_preds = []
         all_clf_labels = []
         all_clf_probs = []
+        all_true_probs = []
+        all_true_categories = []
         risk_names = RISK_NAMES
         
         if thresholds is None:
@@ -110,6 +112,12 @@ class BaseTrainer:
                     all_clf_labels.append(clf_true)
                     all_clf_probs.append(clf_probs)
                     
+                    if "probabilities" in labels:
+                        all_true_probs.append(labels["probabilities"].to(self.device))
+                    
+                    if "categories" in labels:
+                        all_true_categories.append(labels["categories"].to(self.device))
+                    
                     batch_loss_clf = self.loss_clf(clf_logits, clf_true)
                     total_loss_clf += batch_loss_clf.item() * len(inputs)
         
@@ -121,10 +129,17 @@ class BaseTrainer:
             clf_labels = torch.cat(all_clf_labels)
             clf_probs = torch.cat(all_clf_probs)
             
-            metrics = model_metrics(
-                clf_preds, clf_labels, clf_probs, 
-                total_loss_clf, n_samples, risk_names
-            )
+            metrics["loss_clf"] = total_loss_clf / n_samples
+            
+            if len(all_true_probs) > 0:
+                clf_true_probs = torch.cat(all_true_probs)
+                prob_metrics = model_metrics_probability(clf_probs, clf_true_probs, risk_names)
+                metrics.update(prob_metrics)
+                metrics["_true_probs"] = clf_true_probs.cpu().numpy()
+            
+            if len(all_true_categories) > 0:
+                clf_true_categories = torch.cat(all_true_categories)
+                metrics["_true_categories"] = clf_true_categories.cpu().numpy()
             
             metrics["_probs"] = clf_probs.cpu().numpy()
             metrics["_labels"] = clf_labels.cpu().numpy()
