@@ -204,10 +204,10 @@ def main(config: ExperimentConfig):
                         
                         pred_categories = apply_risk_categorization(client_test_probs, per_client_thresholds[client_id], risk_names=RISK_NAMES)
                         
-                        all_per_client_pred_categories.append(pred_categories)
                         if client_true_cats is not None:
+                            all_per_client_pred_categories.append(pred_categories)
                             all_per_client_true_categories.append(client_true_cats)
-                        client_indices_for_metrics.append(client_id)
+                            client_indices_for_metrics.append(client_id)
             
             if all_per_client_pred_categories:
                 combined_pred_cats = np.vstack(all_per_client_pred_categories)
