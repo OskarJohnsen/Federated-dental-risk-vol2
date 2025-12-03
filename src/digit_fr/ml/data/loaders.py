@@ -8,8 +8,10 @@ from typing import Optional
 from ..config.experiment_config import ExperimentConfig
 from .preprocessing import PreprocessingPipeline
 
-def load_raw_data():
-    df = pd.read_csv(root_path('data', 'raw', 'fed_recommenders_synthetic_dataset_50k.csv'))
+def load_raw_data(dataset_path: Optional[str] = None):
+    if dataset_path is None:
+        dataset_path = root_path('data', 'raw', 'fed_recommenders_synthetic_dataset_50k.csv')
+    df = pd.read_csv(dataset_path)
     
     target_classification = ["Risk_AlveolarOsteitis", "Risk_SecondaryInfection", "Risk_NerveDysesthesia", "Risk_Bleeding"]
     target_categories = ["Risk_Category_AlveolarOsteitis", "Risk_Category_SecondaryInfection", "Risk_Category_NerveDysesthesia", "Risk_Category_Bleeding"]
@@ -93,10 +95,13 @@ def load_data_with_split(test_size=0.2, val_size=0.2, data_split_seed=42, config
         data_split_seed = config.data_split_seed
         test_size = config.test_size
         val_size = config.val_size
+        dataset_path = config.dataset_path
+    else:
+        dataset_path = None
 
     data_seeds(data_split_seed)
 
-    data = load_raw_data()
+    data = load_raw_data(dataset_path=dataset_path)
 
     client_ids = data['Client'].copy()
 

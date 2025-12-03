@@ -38,6 +38,8 @@ class ExperimentConfig:
     test_size: float = 0.2
     val_size: float = 0.2
     split_strategy: Literal["random", "stratified", "client_aware"] = "random"
+    dataset_path: Optional[str] = None
+    test_set_path: Optional[str] = None
     
     # model
     model: Literal["MLP"] = "MLP"

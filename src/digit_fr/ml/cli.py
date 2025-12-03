@@ -1,6 +1,7 @@
 from __future__ import annotations
 import typer
 from .config.experiment_config import ExperimentConfig
+from ...core.paths import root_path
 
 app = typer.Typer(add_completion=False)
 
@@ -15,6 +16,8 @@ def train(experiment_type: str = typer.Argument()):
             experiment_id="baseline_v1",
             model_seed=42,
             data_split_seed=42,
+            dataset_path=str(root_path('data', 'raw', 'fed_recommenders_synthetic_dataset_50k.csv')),
+            test_set_path=str(root_path('data', 'processed', 'global_test_set.csv')),
         )
         train_centralized(config)
     elif experiment_type == "local":
