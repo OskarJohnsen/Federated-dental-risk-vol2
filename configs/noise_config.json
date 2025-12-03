@@ -5,13 +5,13 @@
     "Periodontal_Status": {
       "min": 1,
       "max": 3,
-      "noise_multiplier": 1.5,
+      "noise_multiplier": 2.0,
       "description": "Periodontal status assessment can vary between clinicians"
     },
     "Tooth_Mobility": {
       "min": 0,
       "max": 2,
-      "noise_multiplier": 2.0,
+      "noise_multiplier": 2.5,
       "description": "Mobility assessment is subjective and varies significantly"
     },
     "Root_Development": {

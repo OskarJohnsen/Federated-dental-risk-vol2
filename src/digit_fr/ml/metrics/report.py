@@ -37,7 +37,7 @@ def log_experiment_config(config: ExperimentConfig, model: torch.nn.Module, clas
         config_updates["class_weights"] = class_weights.tolist()
     
     if config_updates:
-        wandb.config.update(config_updates)
+        wandb.config.update(config_updates, allow_val_change=True)
 
 def log_dataset_info(dataset_metrics_dict: Dict[str, Any], risk_names: list = None):
     if risk_names is None:

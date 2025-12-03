@@ -1,7 +1,7 @@
 from __future__ import annotations
 import typer
 from .config.experiment_config import ExperimentConfig
-from ...core.paths import root_path
+from ..core.paths import root_path
 
 app = typer.Typer(add_completion=False)
 

@@ -2,126 +2,140 @@
   "1": {
     "name": "AcademicCenter",
     "prevalence_shift": {
-      "Impaction_Depth": [0.2, 0.5, 0.3],
-      "Proximity_Nerve_p": 0.35,
-      "Age_mu": 26
+      "Impaction_Depth": [0.15, 0.5, 0.35],
+      "Proximity_Nerve_p": 0.45,
+      "Age_mu": 24
     },
     "score_scale": {
-      "1": 0.95,
-      "2": 1.05,
-      "3": 1.00,
-      "4": 1.00
+      "1": 0.80,
+      "2": 1.15,
+      "3": 1.10,
+      "4": 1.05
     },
     "missingness": {
-      "Tooth_Mobility": 0.10
+      "Tooth_Mobility": 0.15,
+      "Periodontal_Status": 0.12
     },
-    "measurement_noise": 0.03
+    "measurement_noise": 0.05
   },
   "2": {
     "name": "HighReferralClinic",
     "prevalence_shift": {
-      "Impaction_Depth": [0.2, 0.4, 0.4],
-      "Proximity_Nerve_p": 0.40,
-      "Age_mu": 30
+      "Impaction_Depth": [0.15, 0.35, 0.50],
+      "Proximity_Nerve_p": 0.50,
+      "Age_mu": 32
     },
     "score_scale": {
-      "1": 0.90,
-      "2": 0.95,
-      "3": 1.10,
-      "4": 1.10
+      "1": 0.75,
+      "2": 0.85,
+      "3": 1.25,
+      "4": 1.20
     },
-    "missingness": {},
-    "measurement_noise": 0.04
+    "missingness": {
+      "Root_Development": 0.15,
+      "Tooth_Angulation": 0.12
+    },
+    "measurement_noise": 0.06
   },
   "3": {
     "name": "RuralGeneral",
     "prevalence_shift": {
-      "Impaction_Depth": [0.4, 0.45, 0.15],
-      "Proximity_Nerve_p": 0.25,
-      "Age_mu": 27
+      "Impaction_Depth": [0.50, 0.40, 0.10],
+      "Proximity_Nerve_p": 0.20,
+      "Age_mu": 26
     },
     "score_scale": {
-      "1": 1.05,
-      "2": 1.00,
-      "3": 0.95,
-      "4": 0.95
+      "1": 1.20,
+      "2": 1.10,
+      "3": 0.80,
+      "4": 0.85
     },
     "missingness": {
-      "Bone_Density": 0.11
+      "Bone_Density": 0.20,
+      "Tooth_Angulation": 0.18,
+      "Root_Development": 0.12
     },
-    "measurement_noise": 0.015
+    "measurement_noise": 0.03
   },
   "4": {
     "name": "OMFS_Experienced",
     "prevalence_shift": {
-      "Impaction_Depth": [0.25, 0.45, 0.30],
-      "Proximity_Nerve_p": 0.35,
-      "Age_mu": 28
+      "Impaction_Depth": [0.20, 0.45, 0.35],
+      "Proximity_Nerve_p": 0.40,
+      "Age_mu": 29
     },
     "score_scale": {
-      "1": 0.95,
-      "2": 1.05,
-      "3": 0.95,
-      "4": 1.05
+      "1": 0.85,
+      "2": 1.15,
+      "3": 0.85,
+      "4": 1.15
     },
-    "missingness": {},
-    "measurement_noise": 0.029
+    "missingness": {
+      "Periodontal_Status": 0.10
+    },
+    "measurement_noise": 0.04
   },
   "5": {
     "name": "OlderPopulation",
     "prevalence_shift": {
-      "Age_mu": 35,
-      "Proximity_Nerve_p": 0.32
+      "Age_mu": 38,
+      "Proximity_Nerve_p": 0.35
     },
     "score_scale": {
-      "1": 0.95,
-      "2": 1.00,
-      "3": 1.05,
-      "4": 1.05
+      "1": 0.85,
+      "2": 0.90,
+      "3": 1.20,
+      "4": 1.15
     },
-    "missingness": {},
-    "measurement_noise": 0.10
+    "missingness": {
+      "Tooth_Mobility": 0.15,
+      "Periodontal_Status": 0.18
+    },
+    "measurement_noise": 0.15
   },
   "6": {
     "name": "PrivatePractice",
     "prevalence_shift": {
-      "Impaction_Depth": [0.50, 0.40, 0.10],
-      "Proximity_Nerve_p": 0.28,
-      "Age_mu": 29
+      "Impaction_Depth": [0.55, 0.35, 0.10],
+      "Proximity_Nerve_p": 0.25,
+      "Age_mu": 30
     },
     "score_scale": {
-      "1": 1.00,
-      "2": 1.05,
-      "3": 0.90,
-      "4": 0.95
+      "1": 1.10,
+      "2": 1.15,
+      "3": 0.75,
+      "4": 0.85
     },
-    "missingness": {},
-    "measurement_noise": 0.08
+    "missingness": {
+      "Bone_Density": 0.12
+    },
+    "measurement_noise": 0.10
   },
   "7": {
     "name": "TeachingHospital",
     "prevalence_shift": {
-      "Impaction_Depth": [0.20, 0.45, 0.35],
-      "Proximity_Nerve_p": 0.38,
-      "Age_mu": 27
+      "Impaction_Depth": [0.15, 0.40, 0.45],
+      "Proximity_Nerve_p": 0.42,
+      "Age_mu": 26
     },
     "score_scale": {
-      "1": 0.92,
-      "2": 1.00,
-      "3": 1.08,
-      "4": 1.05
+      "1": 0.80,
+      "2": 0.90,
+      "3": 1.20,
+      "4": 1.15
     },
     "missingness": {
-      "Tooth_Mobility": 0.10,
-      "Bone_Density": 0.05
+      "Tooth_Mobility": 0.18,
+      "Bone_Density": 0.12,
+      "Periodontal_Status": 0.15
     },
-    "measurement_noise": 0.05
+    "measurement_noise": 0.07
   },
   "8": {
     "name": "UrbanCommunity",
     "prevalence_shift": {
-      "Impaction_Depth": [0.40, 0.45, 0.15],
-      "Proximity_Nerve_p": 0.30,
+      "Impaction_Depth": [0.45, 0.40, 0.15],
+      "Proximity_Nerve_p": 0.28,
       "Age_mu": 28
     },
     "score_scale": {
@@ -131,45 +145,48 @@
       "4": 1.00
     },
     "missingness": {
-      "Bone_Density": 0.05
+      "Bone_Density": 0.12,
+      "Root_Development": 0.10
     },
-    "measurement_noise": 0.04
+    "measurement_noise": 0.06
   },
   "9": {
     "name": "PublicHealthClinic",
     "prevalence_shift": {
-      "Impaction_Depth": [0.45, 0.45, 0.10],
-      "Proximity_Nerve_p": 0.26,
-      "Age_mu": 25
+      "Impaction_Depth": [0.50, 0.40, 0.10],
+      "Proximity_Nerve_p": 0.22,
+      "Age_mu": 23
     },
     "score_scale": {
-      "1": 1.05,
-      "2": 0.98,
-      "3": 0.93,
-      "4": 0.95
+      "1": 1.15,
+      "2": 1.05,
+      "3": 0.80,
+      "4": 0.85
     },
     "missingness": {
-      "Tooth_Mobility": 0.10,
-      "Bone_Density": 0.15
+      "Tooth_Mobility": 0.20,
+      "Bone_Density": 0.25,
+      "Periodontal_Status": 0.18
     },
-    "measurement_noise": 0.08
+    "measurement_noise": 0.12
   },
   "10": {
     "name": "SuburbanGeneral",
     "prevalence_shift": {
-      "Impaction_Depth": [0.38, 0.47, 0.15],
-      "Proximity_Nerve_p": 0.31,
-      "Age_mu": 30
+      "Impaction_Depth": [0.40, 0.45, 0.15],
+      "Proximity_Nerve_p": 0.30,
+      "Age_mu": 31
     },
     "score_scale": {
-      "1": 0.98,
-      "2": 1.02,
+      "1": 0.90,
+      "2": 1.10,
       "3": 1.00,
       "4": 1.00
     },
     "missingness": {
-      "Tooth_Mobility": 0.10
+      "Tooth_Mobility": 0.15,
+      "Tooth_Angulation": 0.12
     },
-    "measurement_noise": 0.09
+    "measurement_noise": 0.08
   }
 }
