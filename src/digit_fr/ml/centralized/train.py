@@ -184,39 +184,24 @@ def main(config: ExperimentConfig):
                 per_client_thresholds[client_id] = thresholds
                 print(f"Client {client_id}: {client_mask.sum()} validation samples")
         
-        test_client_ids = data['test'].get('Client')
-        if test_client_ids is not None:
-            if isinstance(test_client_ids, pd.Series):
-                test_client_ids_arr = test_client_ids.values
-            else:
-                test_client_ids_arr = np.array(test_client_ids)
-            
+        if test_true_categories is not None:
             all_per_client_pred_categories = []
-            all_per_client_true_categories = []
-            client_indices_for_metrics = []
             
             for client_id in unique_clients:
                 if client_id in per_client_thresholds:
-                    client_test_mask = test_client_ids_arr == client_id
-                    if client_test_mask.sum() > 0:
-                        client_test_probs = test_probs[client_test_mask]
-                        client_true_cats = test_true_categories[client_test_mask] if test_true_categories is not None else None
-                        
-                        pred_categories = apply_risk_categorization(client_test_probs, per_client_thresholds[client_id], risk_names=RISK_NAMES)
-                        
-                        if client_true_cats is not None:
-                            all_per_client_pred_categories.append(pred_categories)
-                            all_per_client_true_categories.append(client_true_cats)
-                            client_indices_for_metrics.append(client_id)
+
+                    pred_categories = apply_risk_categorization(test_probs, per_client_thresholds[client_id], risk_names=RISK_NAMES)
+                    
+                    per_client_cat_metrics = model_metrics_categories(pred_categories,  test_true_categories,  risk_names=RISK_NAMES,  prefix=f"category_per_client_client_{client_id}")
+                    all_test_metrics.update(per_client_cat_metrics)
+                    
+                    all_per_client_pred_categories.append(pred_categories)
             
             if all_per_client_pred_categories:
                 combined_pred_cats = np.vstack(all_per_client_pred_categories)
-                combined_true_cats = np.vstack(all_per_client_true_categories) if all_per_client_true_categories else None
-                
-                if combined_true_cats is not None:
-                    per_client_cat_metrics = model_metrics_categories(combined_pred_cats, combined_true_cats, risk_names=RISK_NAMES, prefix="category_per_client")
-                    all_test_metrics.update(per_client_cat_metrics)
-                    print(f"Per-Client category metrics done")
+                combined_true_cats = np.vstack([test_true_categories] * len(all_per_client_pred_categories))
+                per_client_cat_metrics_macro = model_metrics_categories(combined_pred_cats, combined_true_cats, risk_names=RISK_NAMES, prefix="category_per_client")
+                all_test_metrics.update(per_client_cat_metrics_macro)
                 
                 # Per-Client Consistency
                 if len(per_client_thresholds) > 1:

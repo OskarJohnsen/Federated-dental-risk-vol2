@@ -32,8 +32,20 @@ def train(experiment_type: str = typer.Argument()):
         )
         train_local(config)
     elif experiment_type == "federated":
-        typer.echo("Federated training not yet implemented")
-        raise typer.Exit(code=1)
+        from .federated.train import main as train_federated
+        config = ExperimentConfig(
+            experiment_type="federated",
+            experiment_id="baseline_v1",
+            model_seed=42,
+            data_split_seed=42,
+            dataset_path=str(root_path('data', 'raw', 'fed_recommenders_synthetic_dataset_50k.csv')),
+            test_set_path=str(root_path('data', 'processed', 'global_test_set.csv')),
+            federated_rounds=5,
+            clients_per_round=None,
+            local_epochs=3,
+            aggregation_method="fedavg",
+        )
+        train_federated(config)
 
 def run():
     app()

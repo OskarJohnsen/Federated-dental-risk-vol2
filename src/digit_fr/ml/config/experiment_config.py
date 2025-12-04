@@ -71,7 +71,7 @@ class ExperimentConfig:
     data_version: Optional[str] = None
     code_version: Optional[str] = None
     
-    # federated (mentioned in flower, maybe add / use later)
+    # federated
     federated_rounds: Optional[int] = None
     clients_per_round: Optional[int] = None
     local_epochs: Optional[int] = None
