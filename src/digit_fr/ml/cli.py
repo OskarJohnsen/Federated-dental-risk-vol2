@@ -40,9 +40,9 @@ def train(experiment_type: str = typer.Argument()):
             data_split_seed=42,
             dataset_path=str(root_path('data', 'raw', 'fed_recommenders_synthetic_dataset_50k.csv')),
             test_set_path=str(root_path('data', 'processed', 'global_test_set.csv')),
-            federated_rounds=5,
+            federated_rounds=6,
             clients_per_round=None,
-            local_epochs=3,
+            local_epochs=5,
             aggregation_method="fedavg",
         )
         train_federated(config)

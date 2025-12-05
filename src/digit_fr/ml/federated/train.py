@@ -22,7 +22,6 @@ from typing import Optional, Tuple
 import numpy as np
 import random
 
-
 def load_client_data_with_global_pipeline(full_data: dict, client_id: int, global_pipeline: PreprocessingPipeline, config: ExperimentConfig) -> dict:
     data_seeds(config.data_split_seed)
     client_mask = full_data['Client'] == client_id
@@ -45,7 +44,6 @@ def load_client_data_with_global_pipeline(full_data: dict, client_id: int, globa
     }
     
     return result
-
 
 def train_client_locally(model: torch.nn.Module, client_data: dict, config: ExperimentConfig, local_epochs: int) -> Tuple[torch.nn.Module, int]:
     y_train = client_data["train"]["y_classification"]
@@ -89,7 +87,6 @@ def train_client_locally(model: torch.nn.Module, client_data: dict, config: Expe
     
     return model, n_samples
 
-
 def main(config: ExperimentConfig):
     all_seeds(config.model_seed)
     
@@ -124,6 +121,8 @@ def main(config: ExperimentConfig):
     else:
         print(f"Using all clients per round")
     
+    print(f"\nDataset path: {config.dataset_path}")
+    print(f"Test set path: {config.test_set_path}")
     print("\nLoading full dataset...")
     full_data = load_raw_data(dataset_path=config.dataset_path)
     client_ids = sorted(full_data['Client'].unique())
@@ -296,12 +295,7 @@ def main(config: ExperimentConfig):
                     if client_id in per_client_thresholds:
                         pred_categories = apply_risk_categorization(test_probs, per_client_thresholds[client_id], risk_names=RISK_NAMES)
                         
-                        per_client_cat_metrics = model_metrics_categories(
-                            pred_categories, 
-                            test_true_categories, 
-                            risk_names=RISK_NAMES, 
-                            prefix=f"category_per_client_client_{client_id}"
-                        )
+                        per_client_cat_metrics = model_metrics_categories(pred_categories, test_true_categories, risk_names=RISK_NAMES, prefix=f"category_per_client_client_{client_id}")
                         all_test_metrics.update(per_client_cat_metrics)
                         
                         all_per_client_pred_categories.append(pred_categories)
