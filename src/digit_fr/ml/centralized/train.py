@@ -15,6 +15,7 @@ from ..util.seed import all_seeds
 from ..config.experiment_config import ExperimentConfig, get_data_version
 from typing import Optional
 import numpy as np
+from ..constants import DATASET, IID_TYPE
 
 def main(config: ExperimentConfig):
     all_seeds(config.model_seed)
@@ -29,9 +30,9 @@ def main(config: ExperimentConfig):
     )
     
     if config.dataset_path is None:
-        config.dataset_path = str(root_path('data', 'raw', 'fed_recommenders_synthetic_dataset_50k.csv'))
+        raise FileNotFoundError("Need dataset path")
     if config.test_set_path is None:
-        config.test_set_path = str(root_path('data', 'processed', 'global_test_set.csv'))
+        raise FileNotFoundError("Need testset path")
     
     if config.data_version is None:
         config.data_version = get_data_version(config.dataset_path)
@@ -162,7 +163,8 @@ def main(config: ExperimentConfig):
             print(f"Macro: MSE={test_metrics['mse_macro']}, MAE={test_metrics['mae_macro']}")
         all_test_metrics.update({k: v for k, v in test_metrics.items() if k.startswith(('mse_', 'mae_', 'brier_score_prob_', 'ece_prob_'))})
     
-    global_thresholds = load_global_thresholds()
+    global_thresholds = load_global_thresholds(root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json'))
+    print(f'Global threshold path: {root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json')}')
     
     val_client_ids = data['val']['Client'].values
     unique_clients = np.unique(val_client_ids)
@@ -267,19 +269,14 @@ def main(config: ExperimentConfig):
                 for client_id in sorted(unique_test_clients):
                     global_categorizations_sanity[client_id] = global_pred_categories
                 
-                consistency_metrics_global = compute_consistency_metrics(
-                    categorizations=global_categorizations_sanity,
-                    prefix="consistency_global",
-                    risk_names=RISK_NAMES,
-                    client_ids=sorted(unique_test_clients)
-                )
+                consistency_metrics_global = compute_consistency_metrics(categorizations=global_categorizations_sanity, prefix="consistency_global", risk_names=RISK_NAMES, client_ids=sorted(unique_test_clients))
                 
                 if consistency_metrics_global:
                     for risk_name in RISK_NAMES:
                         any_key = f"consistency_global/inconsistency_any_risk_{risk_name}"
                         dist_key = f"consistency_global/inconsistency_distance_risk_{risk_name}"
                         disagree_key = f"consistency_global/patient_disagreement_risk_{risk_name}"
-                        
+                
                         if any_key in consistency_metrics_global:
                             print(f"\n{risk_name}:")
                             print(f"Inconsistency (any): {consistency_metrics_global[any_key]} (expected: 0.0)")

@@ -9,6 +9,19 @@
     "description": "Total dataset size = n_clients × patients_per_client"
   },
   
+  "client_profiles": {
+    "n_profiles": 10,
+    "seed": 42,
+    "ranges": {
+      "age_mu": {"min": 20, "max": 40},
+      "proximity_nerve_p": {"min": 0.15, "max": 0.60},
+      "score_scale": {"min": 0.70, "max": 1.30},
+      "missingness_rate": {"min": 0.0, "max": 0.25},
+      "measurement_noise": {"min": 0.03, "max": 0.15},
+      "max_missingness_columns": 3
+    }
+  },
+  
   "decision_model": {
     "temperature": 1.0,
     "noise_sd": 0.1,
@@ -18,7 +31,7 @@
   "output": {
     "formats": ["csv", "xlsx"],
     "output_dir": "../../data/raw/",
-    "filename_base": "fed_recommenders_synthetic_dataset_50k",
+    "filename_base": "fed_recommenders_synthetic_dataset_A_non-IID",
     "description": "Output files: fed_recommenders_synthetic_dataset.csv and .xlsx"
   },
   

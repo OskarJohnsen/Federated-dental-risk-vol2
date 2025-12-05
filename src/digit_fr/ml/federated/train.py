@@ -21,6 +21,7 @@ from ..config.experiment_config import ExperimentConfig, get_data_version
 from typing import Optional, Tuple
 import numpy as np
 import random
+from ..constants import DATASET, IID_TYPE
 
 def load_client_data_with_global_pipeline(full_data: dict, client_id: int, global_pipeline: PreprocessingPipeline, config: ExperimentConfig) -> dict:
     data_seeds(config.data_split_seed)
@@ -171,7 +172,8 @@ def main(config: ExperimentConfig):
     test_batch_size = min(config.batch_size, test_size) if test_size > 0 else config.batch_size
     test_loader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=False, drop_last=False)
     
-    global_thresholds = load_global_thresholds()
+    global_thresholds = load_global_thresholds(root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json'))
+    print(f'Global threshold path: {root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json')}')
     
     global_model = MLP(
         input_size=n_features,

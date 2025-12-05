@@ -6,6 +6,7 @@ import numpy as np
 from ..config.loader import load_all_configs
 from ..generation.synth import generate_dataset
 from ...core.paths import ensure_dir, root_path
+from digit_fr.ml.constants import DATASET, IID_TYPE
 
 app = typer.Typer(add_completion=False)
 
@@ -48,7 +49,8 @@ def main(
 
     configs_dir = proj_root.joinpath("configs")
     ensure_dir(configs_dir)
-    thresholds_path = configs_dir / "global_thresholds.json"
+    thresholds_path = configs_dir / "global_thresholds" / f"{DATASET}" / f"global_thresholds_{IID_TYPE}.json"
+    print(f"threshold path: {thresholds_path}")
     with thresholds_path.open("w") as f:
         json.dump(global_thresholds, f, indent=2)
 

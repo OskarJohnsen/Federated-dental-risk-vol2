@@ -14,6 +14,7 @@ from ..util.seed import all_seeds
 from ..config.experiment_config import ExperimentConfig, get_data_version
 from typing import Optional
 import numpy as np
+from ..constants import DATASET, IID_TYPE
 
 def main(config: ExperimentConfig):
     all_seeds(config.model_seed)
@@ -44,7 +45,7 @@ def main(config: ExperimentConfig):
     client_ids = sorted(full_data['Client'].unique())
     print(f"Found {len(client_ids)} clients: {client_ids}")
     
-    global_thresholds = load_global_thresholds()
+    global_thresholds = load_global_thresholds(root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json'))
     
     all_client_metrics = {}
     all_client_thresholds = {}

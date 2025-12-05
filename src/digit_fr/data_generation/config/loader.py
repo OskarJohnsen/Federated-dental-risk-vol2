@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Tuple
 from ...core.paths import root_path
+from ..profiles.generator import generate_client_profiles
 
 _CACHE: Dict[str, Any] = {}
 
@@ -26,11 +27,21 @@ def load_all_configs(force_reload: bool = False) -> Dict[str, Any]:
     generation = _read_json(cdir / "generation_config.json")
     extraction_types = _read_json(cdir / "extraction_type_stats.json")
     extraction_binary = _read_json(cdir / "extraction_binary_stats.json")
-    client_profiles = _read_json(cdir / "client_profiles.json")
     noise = _read_json(cdir / "noise_config.json")
     risks = _read_json(cdir / "risk_stats.json")
 
     _validate_risk_stats(risks)
+
+    if "client_profiles" in generation:
+        profile_config = generation["client_profiles"]
+        n_profiles = profile_config.get("n_profiles", generation["dataset"]["n_clients"])
+        ranges_config = profile_config.get("ranges", {})
+        seed = profile_config.get("seed", generation["dataset"].get("random_seed", 42))
+        
+        client_profiles = generate_client_profiles(n_profiles, ranges_config, seed)
+    else:
+        print("Warning: Using default client profiles")
+        client_profiles = _read_json(cdir / "client_profiles.json")
 
     _CACHE = {
         "generation": generation,

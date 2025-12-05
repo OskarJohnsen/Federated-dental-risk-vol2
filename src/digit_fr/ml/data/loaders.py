@@ -36,7 +36,7 @@ def load_raw_data(dataset_path: Optional[str] = None):
 
 def load_global_test_set(test_set_path: Optional[str] = None, preprocessing_pipeline: Optional[PreprocessingPipeline] = None) -> dict:
     if test_set_path is None:
-        test_set_path = root_path('data', 'processed', 'global_test_set.csv')
+        FileNotFoundError("Need testset path")
     else:
         test_set_path = Path(test_set_path)
     

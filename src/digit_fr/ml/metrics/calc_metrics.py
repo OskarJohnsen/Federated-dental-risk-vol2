@@ -295,9 +295,27 @@ def compute_consistency_metrics(categorizations: Dict[Any, np.ndarray],  prefix:
         
         risk_categories = np.stack(risk_categories_list, axis=1)
         
-        inconsistency_any_score = inconsistency_any(risk_categories)
-        inconsistency_dist_score = inconsistency_distance(risk_categories)
-        patient_disagree_score = patient_disagreement(risk_categories)
+        # for global sanity check (should be 0.0), just compare first column with all others and exit early
+        all_identical = True
+        if risk_categories.shape[1] > 1:
+            first_col = risk_categories[:, 0]
+            for col_idx in range(1, risk_categories.shape[1]):
+                if not np.array_equal(risk_categories[:, col_idx], first_col):
+                    all_identical = False
+                    break
+            
+            if all_identical:
+                inconsistency_any_score = 0.0
+                inconsistency_dist_score = 0.0
+                patient_disagree_score = 0.0
+            else:
+                inconsistency_any_score = inconsistency_any(risk_categories)
+                inconsistency_dist_score = inconsistency_distance(risk_categories)
+                patient_disagree_score = patient_disagreement(risk_categories)
+        else:
+            inconsistency_any_score = inconsistency_any(risk_categories)
+            inconsistency_dist_score = inconsistency_distance(risk_categories)
+            patient_disagree_score = patient_disagreement(risk_categories)
         
         metrics[f"{prefix}/inconsistency_any_risk_{risk_name}"] = float(inconsistency_any_score)
         metrics[f"{prefix}/inconsistency_distance_risk_{risk_name}"] = float(inconsistency_dist_score)
