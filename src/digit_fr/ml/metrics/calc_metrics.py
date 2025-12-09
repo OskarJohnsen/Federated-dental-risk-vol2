@@ -185,20 +185,8 @@ def model_metrics_probability(clf_probs: torch.Tensor, clf_true_probs: torch.Ten
         mae = np.mean(np.abs(pred_prob_np - true_prob_np))
         metrics[f"mae_risk_{risk_names[i]}"] = float(mae)
         
-        metrics[f"brier_score_prob_risk_{risk_names[i]}"] = float(mse)
-        
         ece_value = ece_probability(pred_prob_np, true_prob_np, n_bins=10)
         metrics[f"ece_prob_risk_{risk_names[i]}"] = ece_value
-    
-    mse_scores = [metrics[f"mse_risk_{risk_names[i]}"] for i in range(n_targets)]
-    mae_scores = [metrics[f"mae_risk_{risk_names[i]}"] for i in range(n_targets)]
-    brier_scores = [metrics[f"brier_score_prob_risk_{risk_names[i]}"] for i in range(n_targets)]
-    ece_scores = [metrics[f"ece_prob_risk_{risk_names[i]}"] for i in range(n_targets)]
-    
-    metrics["mse_macro"] = np.mean(mse_scores)
-    metrics["mae_macro"] = np.mean(mae_scores)
-    metrics["brier_score_prob_macro"] = np.mean(brier_scores)
-    metrics["ece_prob_macro"] = np.mean(ece_scores)
     
     return metrics
 
@@ -222,48 +210,7 @@ def model_metrics_categories(pred_categories: np.ndarray, true_categories: np.nd
         metrics[f"{prefix}_accuracy_risk_{risk_names[i]}"] = float(acc)
         
         f1_macro = sk_f1_score(true_cat, pred_cat, average='macro', zero_division=0)
-        f1_micro = sk_f1_score(true_cat, pred_cat, average='micro', zero_division=0)
-        f1_weighted = sk_f1_score(true_cat, pred_cat, average='weighted', zero_division=0)
-        
         metrics[f"{prefix}_f1_macro_risk_{risk_names[i]}"] = float(f1_macro)
-        metrics[f"{prefix}_f1_micro_risk_{risk_names[i]}"] = float(f1_micro)
-        metrics[f"{prefix}_f1_weighted_risk_{risk_names[i]}"] = float(f1_weighted)
-        
-        cm = confusion_matrix(true_cat, pred_cat, labels=[0, 1, 2])
-        
-        for class_idx, class_name in enumerate(['low', 'medium', 'high']):
-            if class_idx < len(cm):
-                tp = cm[class_idx, class_idx]
-                fp = cm[:, class_idx].sum() - tp
-                fn = cm[class_idx, :].sum() - tp
-                
-                if (tp + fp) > 0:
-                    precision_class = tp / (tp + fp)
-                    recall_class = tp / (tp + fn)
-                else:
-                    precision_class = 0.0
-                    recall_class = 0.0
-
-                if (precision_class + recall_class) > 0:
-                    f1_class = 2 * (precision_class * recall_class) / (precision_class + recall_class)
-                else:
-                    f1_class = 0.0
-
-                metrics[f"{prefix}_precision_{class_name}_risk_{risk_names[i]}"] = float(precision_class)
-                metrics[f"{prefix}_recall_{class_name}_risk_{risk_names[i]}"] = float(recall_class)
-                metrics[f"{prefix}_f1_{class_name}_risk_{risk_names[i]}"] = float(f1_class)
-        
-        metrics[f"{prefix}_confusion_matrix_risk_{risk_names[i]}"] = cm.flatten().tolist()
-    
-    acc_scores = [metrics[f"{prefix}_accuracy_risk_{risk_names[i]}"] for i in range(n_targets)]
-    f1_macro_scores = [metrics[f"{prefix}_f1_macro_risk_{risk_names[i]}"] for i in range(n_targets)]
-    f1_micro_scores = [metrics[f"{prefix}_f1_micro_risk_{risk_names[i]}"] for i in range(n_targets)]
-    f1_weighted_scores = [metrics[f"{prefix}_f1_weighted_risk_{risk_names[i]}"] for i in range(n_targets)]
-    
-    metrics[f"{prefix}_accuracy_macro"] = np.mean(acc_scores)
-    metrics[f"{prefix}_f1_macro_macro"] = np.mean(f1_macro_scores)
-    metrics[f"{prefix}_f1_micro_macro"] = np.mean(f1_micro_scores)
-    metrics[f"{prefix}_f1_weighted_macro"] = np.mean(f1_weighted_scores)
     
     return metrics
 

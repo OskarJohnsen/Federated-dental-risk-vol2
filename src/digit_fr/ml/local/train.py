@@ -180,7 +180,7 @@ def main(config: ExperimentConfig):
         
         client_test_metrics = {}
         
-        prob_keys = [k for k in final_metrics.keys() if k.startswith(('mse_', 'mae_', 'brier_score_prob_', 'ece_prob_'))]
+        prob_keys = [k for k in final_metrics.keys() if k.startswith(('mse_', 'mae_', 'ece_prob_'))]
         for key in prob_keys:
             client_test_metrics[f"client_{client_id}/test/{key}"] = final_metrics[key]
         

@@ -235,7 +235,7 @@ def main(config: ExperimentConfig):
         test_metrics = trainer.evaluate(test_loader, thresholds=None)
         
         round_metrics = {}
-        prob_keys = [k for k in test_metrics.keys() if k.startswith(('mse_', 'mae_', 'brier_score_prob_', 'ece_prob_'))]
+        prob_keys = [k for k in test_metrics.keys() if k.startswith(('mse_', 'mae_', 'ece_prob_'))]
         for key in prob_keys:
             round_metrics[f"round_{round_num + 1}/test/{key}"] = test_metrics[key]
         
@@ -244,8 +244,6 @@ def main(config: ExperimentConfig):
         
         log_metrics_wandb(round_metrics, prefix="")
         
-        if "mse_macro" in test_metrics:
-            print(f"  Round {round_num + 1} - Test MSE (macro): {test_metrics['mse_macro']:.6f}")
     
     print("EVALUATION")
     
@@ -262,9 +260,7 @@ def main(config: ExperimentConfig):
             mae_key = f"mae_risk_{risk_name}"
             if mse_key in final_test_metrics:
                 print(f"{risk_name}: MSE={final_test_metrics[mse_key]:.6f}, MAE={final_test_metrics[mae_key]:.6f}")
-        if "mse_macro" in final_test_metrics:
-            print(f"Macro: MSE={final_test_metrics['mse_macro']:.6f}, MAE={final_test_metrics['mae_macro']:.6f}")
-        all_test_metrics.update({k: v for k, v in final_test_metrics.items() if k.startswith(('mse_', 'mae_', 'brier_score_prob_', 'ece_prob_'))})
+        all_test_metrics.update({k: v for k, v in final_test_metrics.items() if k.startswith(('mse_', 'mae_', 'ece_prob_'))})
     
     if config.category_strategy in ["per_client", "both"] and test_probs is not None:
         print("\nPER-CLIENT CATEGORY EVAL")

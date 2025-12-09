@@ -40,6 +40,8 @@ def main(config: ExperimentConfig):
     print(f"{config.experiment_type.upper()} TRAINING")
     print(f"Experiment ID: {config.experiment_id}")
     print(f"Seed (Model): {config.model_seed}, Seed (Data): {config.data_split_seed}")
+    print(f"\nDataset path: {config.dataset_path}")
+    print(f"Test set path: {config.test_set_path}")
 
     print("\nData")
     data = load_data_with_split(config=config)
@@ -159,9 +161,7 @@ def main(config: ExperimentConfig):
             mae_key = f"mae_risk_{risk_name}"
             if mse_key in test_metrics:
                 print(f"{risk_name}: MSE={test_metrics[mse_key]}, MAE={test_metrics[mae_key]}")
-        if "mse_macro" in test_metrics:
-            print(f"Macro: MSE={test_metrics['mse_macro']}, MAE={test_metrics['mae_macro']}")
-        all_test_metrics.update({k: v for k, v in test_metrics.items() if k.startswith(('mse_', 'mae_', 'brier_score_prob_', 'ece_prob_'))})
+        all_test_metrics.update({k: v for k, v in test_metrics.items() if k.startswith(('mse_', 'mae_', 'ece_prob_'))})
     
     global_thresholds = load_global_thresholds(root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json'))
     print(f'Global threshold path: {root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json')}')
