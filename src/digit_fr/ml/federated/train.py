@@ -24,7 +24,6 @@ import random
 from ..constants import DATASET, IID_TYPE
 
 def load_client_data_with_global_pipeline(full_data: dict, client_id: int, global_pipeline: PreprocessingPipeline, config: ExperimentConfig) -> dict:
-    data_seeds(config.data_split_seed)
     client_mask = full_data['Client'] == client_id
     X_client = full_data['X'][client_mask].copy()
     y_client = full_data['y_classification'][client_mask].copy()
@@ -33,7 +32,7 @@ def load_client_data_with_global_pipeline(full_data: dict, client_id: int, globa
         raise ValueError(f"No data found for client {client_id}")
     
     val_size_adjusted = config.val_size / (1 - config.test_size)
-    X_train, X_val, y_train, y_val = train_test_split(X_client, y_client, test_size=val_size_adjusted, random_state=config.data_split_seed)
+    X_train, X_val, y_train, y_val = train_test_split(X_client, y_client, test_size=val_size_adjusted, random_state=config.data_split_seed + client_id)
     
     X_train_processed = global_pipeline.transform(X_train)
     X_val_processed = global_pipeline.transform(X_val)
@@ -135,8 +134,7 @@ def main(config: ExperimentConfig):
         client_mask = full_data['Client'] == client_id
         X_client = full_data['X'][client_mask].copy()
         val_size_adjusted = config.val_size / (1 - config.test_size)
-        data_seeds(config.data_split_seed)
-        X_train, _, _, _ = train_test_split(X_client, full_data['y_classification'][client_mask], test_size=val_size_adjusted, random_state=config.data_split_seed)
+        X_train, _, _, _ = train_test_split(X_client, full_data['y_classification'][client_mask], test_size=val_size_adjusted, random_state=config.data_split_seed + client_id)
         all_training_data.append(X_train)
     
     combined_training_data = pd.concat(all_training_data, ignore_index=True)
