@@ -10,26 +10,37 @@ from ..constants import RISK_NAMES
 # How often do clinics disagree? -> percent
 def inconsistency_any(categories: np.ndarray) -> float:
     n, k = categories.shape
-    pairs = [(a, b) for a in range(k) for b in range(a+1, k)]
-    total = n * len(pairs)
+    if k < 2:
+        return 0.0
+    total = n * (k * (k - 1) // 2)
+    
     disagreement = 0
-    for a, b in pairs:
-        disagreement += np.sum(categories[:, a] != categories[:, b])
-    return disagreement / total
+    for a in range(k):
+        for b in range(a + 1, k):
+            disagreement += np.sum(categories[:, a] != categories[:, b])
+    
+    return disagreement / total if total > 0 else 0.0
 
 # When they disagree, how severe is the disagreement? -> percent of max_disagreement (if cats = low, medium, high then max_disagreement = high - low = 2)
 def inconsistency_distance(categories: np.ndarray) -> float:
     n, k = categories.shape
-    pairs = [(a, b) for a in range(k) for b in range(a+1, k)]
-    max_disagreement = categories.max() - categories.min()
+    if k < 2:
+        return 0.0
+    
+    max_disagreement = int(categories.max() - categories.min())
     if max_disagreement == 0:
         return 0.0
 
-    total = n * len(pairs) * max_disagreement
+    n_pairs = k * (k - 1) // 2
+    total = int(n) * n_pairs * max_disagreement
+    
     dist_sum = 0
-    for a, b in pairs:
-        dist_sum += np.abs(categories[:, a] - categories[:, b]).sum()
-    return dist_sum / total
+    for a in range(k):
+        for b in range(a + 1, k):
+            diff = categories[:, a].astype(np.int64) - categories[:, b].astype(np.int64)
+            dist_sum += np.abs(diff).sum()
+    
+    return float(dist_sum) / total if total > 0 else 0.0
 
 # What proportion of patients would potentially receive at least one different risk category depending on which clinic they go to?
 def patient_disagreement(categories: np.ndarray) -> float:

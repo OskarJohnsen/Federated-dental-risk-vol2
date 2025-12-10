@@ -49,7 +49,6 @@ def main(config: ExperimentConfig):
     
     all_client_metrics = {}
     all_client_thresholds = {}
-    all_client_models = {}
     all_client_categorizations_per_client = {}
     all_client_categorizations_global = {}
     
@@ -186,7 +185,7 @@ def main(config: ExperimentConfig):
         
         if config.category_strategy in ["per_client", "both"] and test_probs is not None:
             per_client_pred_categories = apply_risk_categorization(test_probs, categorization_boundaries, risk_names=RISK_NAMES)
-            all_client_categorizations_per_client[client_id] = per_client_pred_categories
+            all_client_categorizations_per_client[client_id] = per_client_pred_categories.astype(np.uint8)
             
             if test_true_categories is not None:
                 per_client_cat_metrics = model_metrics_categories(per_client_pred_categories, test_true_categories, risk_names=RISK_NAMES, prefix=f"client_{client_id}/test/category_per_client")
@@ -194,7 +193,7 @@ def main(config: ExperimentConfig):
         
         if config.category_strategy in ["global", "both"] and test_probs is not None:
             global_pred_categories = apply_risk_categorization(test_probs, global_thresholds, risk_names=RISK_NAMES)
-            all_client_categorizations_global[client_id] = global_pred_categories
+            all_client_categorizations_global[client_id] = global_pred_categories.astype(np.uint8)
             
             if test_true_categories is not None:
                 global_cat_metrics = model_metrics_categories(global_pred_categories, test_true_categories,risk_names=RISK_NAMES, prefix=f"client_{client_id}/test/category_global")
@@ -202,7 +201,6 @@ def main(config: ExperimentConfig):
         
         all_client_metrics[client_id] = final_metrics
         all_client_thresholds[client_id] = categorization_boundaries
-        all_client_models[client_id] = model
         
         log_metrics_wandb(client_test_metrics, prefix="")
         
@@ -212,13 +210,25 @@ def main(config: ExperimentConfig):
             mae_key = f"mae_risk_{risk_name}"
             if mse_key in final_metrics:
                 print(f"{risk_name}: MSE={final_metrics[mse_key]:.6f}, MAE={final_metrics[mae_key]:.6f}")
+        
+        del model
+        del trainer
+        del optimizer
+        if scheduler is not None:
+            del scheduler
+        del train_loader
+        del val_loader
+        del test_loader
+        del client_data
+        del client_global_test_data
     
     # Per-client
     if config.category_strategy in ["per_client", "both"] and len(all_client_categorizations_per_client) > 1:
         print("\nCONSISTENCY METRICS: Per-Client Thresholds (Local Models)")
         print("(Different models, different thresholds per client)")
         
-        consistency_metrics_per_client = compute_consistency_metrics(categorizations=all_client_categorizations_per_client, prefix="consistency_per_client", risk_names=RISK_NAMES, client_ids=client_ids)
+        categorizations_for_consistency = {k: v.astype(np.int32) for k, v in all_client_categorizations_per_client.items()}
+        consistency_metrics_per_client = compute_consistency_metrics(categorizations=categorizations_for_consistency, prefix="consistency_per_client", risk_names=RISK_NAMES, client_ids=client_ids)
         
         if consistency_metrics_per_client:
             for risk_name in RISK_NAMES:
@@ -247,7 +257,8 @@ def main(config: ExperimentConfig):
         print("\nCONSISTENCY METRICS: Global Thresholds (Local Models)")
         print("(Different models, same global thresholds)")
         
-        consistency_metrics_global = compute_consistency_metrics(categorizations=all_client_categorizations_global, prefix="consistency_global", risk_names=RISK_NAMES, client_ids=client_ids)
+        categorizations_for_consistency = {k: v.astype(np.int32) for k, v in all_client_categorizations_global.items()}
+        consistency_metrics_global = compute_consistency_metrics(categorizations=categorizations_for_consistency, prefix="consistency_global", risk_names=RISK_NAMES, client_ids=client_ids)
         
         if consistency_metrics_global:
             for risk_name in RISK_NAMES:
