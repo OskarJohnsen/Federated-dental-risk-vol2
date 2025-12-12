@@ -42,7 +42,7 @@ def apply_rule_category(row: Dict[str, Any], scores: Dict[int, float], rule_cate
     return scores
 
 # removed class 4: odontectomy
-def compute_scores_row(row: Dict[str, Any], extraction_cfg: Dict[str, Any], client_profiles: Dict[int, Any]) -> Dict[int, float]:
+def compute_scores_row(row: Dict[str, Any], extraction_cfg: Dict[str, Any], client_profiles: Dict[int, Any], iid_type: str = "non-iid") -> Dict[int, float]:
     base_priors = get_base_priors(extraction_cfg)
     s = {1: base_priors[1], 2: base_priors[2], 3: base_priors[3]}
 
@@ -58,14 +58,15 @@ def compute_scores_row(row: Dict[str, Any], extraction_cfg: Dict[str, Any], clie
     s = apply_rule_category(row, s, "ian_proximity_rules", extraction_cfg)
     s = apply_rule_category(row, s, "symptom_interactions", extraction_cfg)
 
-    client_id = get_value(row, "Client")
-    scales = client_profiles.get(int(client_id) if client_id is not None else 0, {}).get("score_scale", {})
-    for k in s:
-        s[k] *= float(scales.get(k, 1.0))
+    if iid_type.lower() != "iid":
+        client_id = get_value(row, "Client")
+        scales = client_profiles.get(int(client_id) if client_id is not None else 0, {}).get("score_scale", {})
+        for k in s:
+            s[k] *= float(scales.get(k, 1.0))
     return s
 
-def decide_row(row: Dict[str, Any], extraction_cfg: Dict[str, Any], client_profiles: Dict[int, Any], temperature: float, noise_sd: float) -> Tuple[int, Dict[int, float], np.ndarray]:
-    s = compute_scores_row(row, extraction_cfg, client_profiles)
+def decide_row(row: Dict[str, Any], extraction_cfg: Dict[str, Any], client_profiles: Dict[int, Any], temperature: float, noise_sd: float, iid_type: str = "non-iid") -> Tuple[int, Dict[int, float], np.ndarray]:
+    s = compute_scores_row(row, extraction_cfg, client_profiles, iid_type)
     for k in s:
         s[k] += np.random.normal(0.0, noise_sd)
     logits = np.array([s[1], s[2], s[3]], dtype=float)

@@ -1,3 +1,3 @@
 RISK_NAMES = ["AlveolarOsteitis", "SecondaryInfection", "NerveDysesthesia", "Bleeding"]
 DATASET = 'B'
-IID_TYPE = 'non-iid'
+IID_TYPE = 'iid'

@@ -18,6 +18,7 @@ def main(
 ):
     """Generate the synthetic dataset"""
     configs = load_all_configs()
+    configs["iid_type"] = IID_TYPE
     if seed is not None:
         np.random.seed(seed)
     else:
@@ -26,7 +27,7 @@ def main(
     df, global_thresholds = generate_dataset(configs)
 
     cfg_out_dir = configs["generation"]["output"]["output_dir"]
-    base = configs["generation"]["output"]["filename_base"]
+    base = f"fed_recommenders_synthetic_dataset_{DATASET}_{IID_TYPE}"
     proj_root = root_path()
     # Resolve output directory
     if output_dir is not None:

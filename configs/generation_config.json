@@ -2,8 +2,8 @@
   "description": "Configuration for synthetic dataset generation parameters",
   
   "dataset": {
-    "n_clients": 10,
-    "patients_per_client": 5000,
+    "n_clients": 3500,
+    "patients_per_client": 200,
     "random_seed": 42,
     "version": "1.0",
     "description": "Total dataset size = n_clients × patients_per_client"
@@ -31,7 +31,7 @@
   "output": {
     "formats": ["csv", "xlsx"],
     "output_dir": "../../data/raw/",
-    "filename_base": "fed_recommenders_synthetic_dataset_A_non-IID",
+    "filename_base": "placeholder",
     "description": "Output files: fed_recommenders_synthetic_dataset.csv and .xlsx"
   },
   

@@ -43,6 +43,7 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
     extraction_cfg = configs["extraction_types"]
     binary_cfg = configs["extraction_binary"]
     client_profiles_raw = configs["client_profiles"]
+    iid_type = configs.get("iid_type", "non-iid").lower()
 
     # Normalize client profile keys to int and score_scale keys to int
     client_profiles: Dict[int, Any] = {}
@@ -55,14 +56,23 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
     n_clients = gen["dataset"]["n_clients"]
     patients_per_client = gen["dataset"]["patients_per_client"]
 
+    IID_AGE_MU = 28
+    IID_PROXIMITY_P = 0.60
+    IID_DEPTH_PROBS = [0.45, 0.45, 0.1]
+
     rows = []
     for c in range(1, n_clients + 1):
         prof = _get_profile(client_profiles, c)
         n = patients_per_client
 
-        Age_mu = prof["prevalence_shift"].get("Age_mu", 28)
-        Proximity_p = prof["prevalence_shift"].get("Proximity_Nerve_p", 0.60)
-        Depth_probs = prof["prevalence_shift"].get("Impaction_Depth", [0.45, 0.45, 0.1])
+        if iid_type == "iid":
+            Age_mu = IID_AGE_MU
+            Proximity_p = IID_PROXIMITY_P
+            Depth_probs = IID_DEPTH_PROBS
+        else:
+            Age_mu = prof["prevalence_shift"].get("Age_mu", IID_AGE_MU)
+            Proximity_p = prof["prevalence_shift"].get("Proximity_Nerve_p", IID_PROXIMITY_P)
+            Depth_probs = prof["prevalence_shift"].get("Impaction_Depth", IID_DEPTH_PROBS)
 
         age = _generate_age(n, mu=Age_mu)
         sex = _generate_binary(n, 0.5)
@@ -121,17 +131,17 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
 
     df = pd.DataFrame(rows)
 
-    # Optional missingness per profile
-    for c in range(1, n_clients + 1):
-        miss = _get_profile(client_profiles, c)["missingness"]
-        idx = df["Client"] == c
-        for col, rate in miss.items():
-            mask = (np.random.rand(idx.sum()) < rate)
-            df.loc[idx, col] = df.loc[idx, col].mask(mask)
+    if iid_type != "iid":
+        for c in range(1, n_clients + 1):
+            miss = _get_profile(client_profiles, c)["missingness"]
+            idx = df["Client"] == c
+            for col, rate in miss.items():
+                mask = (np.random.rand(idx.sum()) < rate)
+                df.loc[idx, col] = df.loc[idx, col].mask(mask)
 
-    # Apply feature noise before computing risks
-    for c in range(1, n_clients + 1):
-        df = add_feature_noise(df, c, client_profiles, configs["noise"])
+    if iid_type != "iid":
+        for c in range(1, n_clients + 1):
+            df = add_feature_noise(df, c, client_profiles, configs["noise"])
 
     # Decisions, removal, risks (seed is controlled by caller/CLI)
     temperature = gen["decision_model"]["temperature"]
@@ -143,7 +153,7 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
     alveolar_risk_probs, infection_risk_probs, nerve_risk_probs, bleeding_risk_probs = [], [], [], []
 
     for row in tqdm(df.itertuples(index=False), total=len(df), desc="Computing decisions and risks"):
-        d, s, p = decide_row(row, extraction_cfg, client_profiles, temperature, noise_sd)
+        d, s, p = decide_row(row, extraction_cfg, client_profiles, temperature, noise_sd, iid_type)
         decisions.append(d)
         score1.append(s[1]); score2.append(s[2]); score3.append(s[3])
         p1.append(p[0]); p2.append(p[1]); p3.append(p[2])
