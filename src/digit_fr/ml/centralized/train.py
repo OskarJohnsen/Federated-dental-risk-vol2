@@ -40,8 +40,6 @@ def main(config: ExperimentConfig):
     print(f"{config.experiment_type.upper()} TRAINING")
     print(f"Experiment ID: {config.experiment_id}")
     print(f"Seed (Model): {config.model_seed}, Seed (Data): {config.data_split_seed}")
-    print(f"\nDataset path: {config.dataset_path}")
-    print(f"Test set path: {config.test_set_path}")
 
     print("\nData")
     data = load_data_with_split(config=config)
@@ -161,7 +159,9 @@ def main(config: ExperimentConfig):
             mae_key = f"mae_risk_{risk_name}"
             if mse_key in test_metrics:
                 print(f"{risk_name}: MSE={test_metrics[mse_key]}, MAE={test_metrics[mae_key]}")
-        all_test_metrics.update({k: v for k, v in test_metrics.items() if k.startswith(('mse_', 'mae_', 'ece_prob_'))})
+        if "mse_macro" in test_metrics:
+            print(f"Macro: MSE={test_metrics['mse_macro']}, MAE={test_metrics['mae_macro']}")
+        all_test_metrics.update({k: v for k, v in test_metrics.items() if k.startswith(('mse_', 'mae_', 'brier_score_prob_', 'ece_prob_'))})
     
     global_thresholds = load_global_thresholds(root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json'))
     print(f'Global threshold path: {root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json')}')
@@ -218,20 +218,14 @@ def main(config: ExperimentConfig):
                     
                     if consistency_metrics_per_client:
                         for risk_name in RISK_NAMES:
-                            any_key = f"consistency_per_client/inconsistency_any_risk_{risk_name}"
-                            dist_key = f"consistency_per_client/inconsistency_distance_risk_{risk_name}"
                             disagree_key = f"consistency_per_client/patient_disagreement_risk_{risk_name}"
                             
-                            if any_key in consistency_metrics_per_client:
+                            if disagree_key in consistency_metrics_per_client:
                                 print(f"\n{risk_name}:")
-                                print(f"Inconsistency (any): {consistency_metrics_per_client[any_key]}")
-                                print(f"Inconsistency (distance): {consistency_metrics_per_client[dist_key]}")
                                 print(f"Patient disagreement: {consistency_metrics_per_client[disagree_key]}")
                         
-                        if "consistency_per_client/inconsistency_any_macro" in consistency_metrics_per_client:
+                        if "consistency_per_client/patient_disagreement_macro" in consistency_metrics_per_client:
                             print(f"\nMacro Averages (Per-Client Thresholds):")
-                            print(f"Inconsistency (any): {consistency_metrics_per_client['consistency_per_client/inconsistency_any_macro']}")
-                            print(f"Inconsistency (distance): {consistency_metrics_per_client['consistency_per_client/inconsistency_distance_macro']}")
                             print(f"Patient disagreement: {consistency_metrics_per_client['consistency_per_client/patient_disagreement_macro']}")
                         
                         all_test_metrics.update(consistency_metrics_per_client)
@@ -273,20 +267,14 @@ def main(config: ExperimentConfig):
                 
                 if consistency_metrics_global:
                     for risk_name in RISK_NAMES:
-                        any_key = f"consistency_global/inconsistency_any_risk_{risk_name}"
-                        dist_key = f"consistency_global/inconsistency_distance_risk_{risk_name}"
                         disagree_key = f"consistency_global/patient_disagreement_risk_{risk_name}"
                 
-                        if any_key in consistency_metrics_global:
+                        if disagree_key in consistency_metrics_global:
                             print(f"\n{risk_name}:")
-                            print(f"Inconsistency (any): {consistency_metrics_global[any_key]} (expected: 0.0)")
-                            print(f"Inconsistency (distance): {consistency_metrics_global[dist_key]} (expected: 0.0)")
                             print(f"Patient disagreement: {consistency_metrics_global[disagree_key]} (expected: 0.0)")
                     
-                    if "consistency_global/inconsistency_any_macro" in consistency_metrics_global:
+                    if "consistency_global/patient_disagreement_macro" in consistency_metrics_global:
                         print(f"\nMacro Averages (Global Thresholds):")
-                        print(f"Inconsistency (any): {consistency_metrics_global['consistency_global/inconsistency_any_macro']} (expected: 0.0)")
-                        print(f"Inconsistency (distance): {consistency_metrics_global['consistency_global/inconsistency_distance_macro']} (expected: 0.0)")
                         print(f"Patient disagreement: {consistency_metrics_global['consistency_global/patient_disagreement_macro']} (expected: 0.0)")
                     
                     all_test_metrics.update(consistency_metrics_global)

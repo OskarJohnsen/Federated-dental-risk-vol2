@@ -146,7 +146,7 @@ def main(config: ExperimentConfig):
         
         print(f"Training on device: {trainer.device}")
         config.input_size = n_features
-        log_experiment_config(config, model, pos_weights)
+        log_experiment_config(config, model, pos_weights, allow_val_change=True)
         
         results = trainer.fit(train_loader, val_loader=val_loader, epochs=config.epochs)
         
@@ -232,20 +232,14 @@ def main(config: ExperimentConfig):
         
         if consistency_metrics_per_client:
             for risk_name in RISK_NAMES:
-                any_key = f"consistency_per_client/inconsistency_any_risk_{risk_name}"
-                dist_key = f"consistency_per_client/inconsistency_distance_risk_{risk_name}"
                 disagree_key = f"consistency_per_client/patient_disagreement_risk_{risk_name}"
                 
-                if any_key in consistency_metrics_per_client:
+                if disagree_key in consistency_metrics_per_client:
                     print(f"\n{risk_name}:")
-                    print(f"Inconsistency (any): {consistency_metrics_per_client[any_key]:.4f}")
-                    print(f"Inconsistency (distance): {consistency_metrics_per_client[dist_key]:.4f}")
                     print(f"Patient disagreement: {consistency_metrics_per_client[disagree_key]:.4f}")
             
-            if "consistency_per_client/inconsistency_any_macro" in consistency_metrics_per_client:
+            if "consistency_per_client/patient_disagreement_macro" in consistency_metrics_per_client:
                 print(f"\nMacro Averages (Per-Client Thresholds):")
-                print(f"Inconsistency (any): {consistency_metrics_per_client['consistency_per_client/inconsistency_any_macro']:.4f}")
-                print(f"Inconsistency (distance): {consistency_metrics_per_client['consistency_per_client/inconsistency_distance_macro']:.4f}")
                 print(f"Patient disagreement: {consistency_metrics_per_client['consistency_per_client/patient_disagreement_macro']:.4f}")
             
             log_metrics_wandb(consistency_metrics_per_client, prefix="")
@@ -262,20 +256,14 @@ def main(config: ExperimentConfig):
         
         if consistency_metrics_global:
             for risk_name in RISK_NAMES:
-                any_key = f"consistency_global/inconsistency_any_risk_{risk_name}"
-                dist_key = f"consistency_global/inconsistency_distance_risk_{risk_name}"
                 disagree_key = f"consistency_global/patient_disagreement_risk_{risk_name}"
                 
-                if any_key in consistency_metrics_global:
+                if disagree_key in consistency_metrics_global:
                     print(f"\n{risk_name}:")
-                    print(f"Inconsistency (any): {consistency_metrics_global[any_key]:.4f}")
-                    print(f"Inconsistency (distance): {consistency_metrics_global[dist_key]:.4f}")
                     print(f"Patient disagreement: {consistency_metrics_global[disagree_key]:.4f}")
             
-            if "consistency_global/inconsistency_any_macro" in consistency_metrics_global:
+            if "consistency_global/patient_disagreement_macro" in consistency_metrics_global:
                 print(f"\nMacro Averages (Global Thresholds):")
-                print(f"Inconsistency (any): {consistency_metrics_global['consistency_global/inconsistency_any_macro']:.4f}")
-                print(f"Inconsistency (distance): {consistency_metrics_global['consistency_global/inconsistency_distance_macro']:.4f}")
                 print(f"Patient disagreement: {consistency_metrics_global['consistency_global/patient_disagreement_macro']:.4f}")
             
             log_metrics_wandb(consistency_metrics_global, prefix="")

@@ -52,6 +52,52 @@ def patient_disagreement(categories: np.ndarray) -> float:
 
     return num_disagree_patients / n
 
+def fleiss_kappa(categories: np.ndarray) -> float:
+    n_subjects, n_raters = categories.shape
+    
+    if n_subjects == 0 or n_raters < 2:
+        return np.nan
+    
+    if n_raters > 1:
+        all_identical = True
+        first_col = categories[:, 0]
+        for col_idx in range(1, n_raters):
+            if not np.array_equal(categories[:, col_idx], first_col):
+                all_identical = False
+                break
+        if all_identical:
+            return 1.0
+    
+    n_categories = int(categories.max() - categories.min() + 1)
+    if n_categories < 2:
+        return np.nan
+    
+    category_values = np.arange(int(categories.min()), int(categories.max()) + 1)
+    
+    p0_sum = 0.0
+    for i in range(n_subjects):
+        for j in category_values:
+            n_ij = np.sum(categories[i, :] == j)
+            p_ij = n_ij / n_raters
+            p0_sum += p_ij * p_ij
+    
+    P0 = p0_sum / n_subjects
+
+    p_e_sum = 0.0
+    for j in category_values:
+        n_j = np.sum(categories == j)
+        p_j = n_j / (n_subjects * n_raters)
+        p_e_sum += p_j * p_j
+    
+    Pe = p_e_sum
+    
+    if Pe == 1.0:
+        return 1.0
+    
+    kappa = (P0 - Pe) / (1.0 - Pe)
+    
+    return float(kappa)
+
 def ece(probs: np.ndarray, labels: np.ndarray, n_bins: int = 10) -> float:
     bin_boundaries = np.linspace(0, 1, n_bins + 1)
     bin_lowers = bin_boundaries[:-1]
@@ -263,30 +309,27 @@ def compute_consistency_metrics(categorizations: Dict[Any, np.ndarray],  prefix:
                     break
             
             if all_identical:
-                inconsistency_any_score = 0.0
-                inconsistency_dist_score = 0.0
                 patient_disagree_score = 0.0
+                fleiss_kappa_score = 1.0
             else:
-                inconsistency_any_score = inconsistency_any(risk_categories)
-                inconsistency_dist_score = inconsistency_distance(risk_categories)
                 patient_disagree_score = patient_disagreement(risk_categories)
+                fleiss_kappa_score = fleiss_kappa(risk_categories)
         else:
-            inconsistency_any_score = inconsistency_any(risk_categories)
-            inconsistency_dist_score = inconsistency_distance(risk_categories)
             patient_disagree_score = patient_disagreement(risk_categories)
+            fleiss_kappa_score = fleiss_kappa(risk_categories)
         
-        metrics[f"{prefix}/inconsistency_any_risk_{risk_name}"] = float(inconsistency_any_score)
-        metrics[f"{prefix}/inconsistency_distance_risk_{risk_name}"] = float(inconsistency_dist_score)
         metrics[f"{prefix}/patient_disagreement_risk_{risk_name}"] = float(patient_disagree_score)
+        if not np.isnan(fleiss_kappa_score):
+            metrics[f"{prefix}/fleiss_kappa_risk_{risk_name}"] = float(fleiss_kappa_score)
     
     if metrics:
-        inconsistency_any_scores = [metrics[f"{prefix}/inconsistency_any_risk_{risk_name}"] for risk_name in risk_names if f"{prefix}/inconsistency_any_risk_{risk_name}" in metrics]
-        inconsistency_dist_scores = [metrics[f"{prefix}/inconsistency_distance_risk_{risk_name}"] for risk_name in risk_names if f"{prefix}/inconsistency_distance_risk_{risk_name}" in metrics]
         patient_disagree_scores = [metrics[f"{prefix}/patient_disagreement_risk_{risk_name}"] for risk_name in risk_names if f"{prefix}/patient_disagreement_risk_{risk_name}" in metrics]
+        fleiss_kappa_scores = [metrics[f"{prefix}/fleiss_kappa_risk_{risk_name}"] for risk_name in risk_names if f"{prefix}/fleiss_kappa_risk_{risk_name}" in metrics]
         
-        if inconsistency_any_scores:
-            metrics[f"{prefix}/inconsistency_any_macro"] = float(np.mean(inconsistency_any_scores))
-            metrics[f"{prefix}/inconsistency_distance_macro"] = float(np.mean(inconsistency_dist_scores))
+        if patient_disagree_scores:
             metrics[f"{prefix}/patient_disagreement_macro"] = float(np.mean(patient_disagree_scores))
+        
+        if fleiss_kappa_scores:
+            metrics[f"{prefix}/fleiss_kappa_macro"] = float(np.mean(fleiss_kappa_scores))
     
     return metrics

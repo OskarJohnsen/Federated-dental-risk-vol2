@@ -322,20 +322,14 @@ def main(config: ExperimentConfig):
                             
                             if consistency_metrics_per_client:
                                 for risk_name in RISK_NAMES:
-                                    any_key = f"consistency_per_client/inconsistency_any_risk_{risk_name}"
-                                    dist_key = f"consistency_per_client/inconsistency_distance_risk_{risk_name}"
                                     disagree_key = f"consistency_per_client/patient_disagreement_risk_{risk_name}"
                                     
-                                    if any_key in consistency_metrics_per_client:
+                                    if disagree_key in consistency_metrics_per_client:
                                         print(f"\n{risk_name}:")
-                                        print(f"Inconsistency (any): {consistency_metrics_per_client[any_key]:.6f}")
-                                        print(f"Inconsistency (distance): {consistency_metrics_per_client[dist_key]:.6f}")
                                         print(f"Patient disagreement: {consistency_metrics_per_client[disagree_key]:.6f}")
                                 
-                                if "consistency_per_client/inconsistency_any_macro" in consistency_metrics_per_client:
+                                if "consistency_per_client/patient_disagreement_macro" in consistency_metrics_per_client:
                                     print(f"\nMacro Averages (Per-Client Thresholds):")
-                                    print(f"Inconsistency (any): {consistency_metrics_per_client['consistency_per_client/inconsistency_any_macro']:.6f}")
-                                    print(f"Inconsistency (distance): {consistency_metrics_per_client['consistency_per_client/inconsistency_distance_macro']:.6f}")
                                     print(f"Patient disagreement: {consistency_metrics_per_client['consistency_per_client/patient_disagreement_macro']:.6f}")
                                 
                                 all_test_metrics.update(consistency_metrics_per_client)
@@ -375,20 +369,14 @@ def main(config: ExperimentConfig):
                 
                 if consistency_metrics_global:
                     for risk_name in RISK_NAMES:
-                        any_key = f"consistency_global/inconsistency_any_risk_{risk_name}"
-                        dist_key = f"consistency_global/inconsistency_distance_risk_{risk_name}"
                         disagree_key = f"consistency_global/patient_disagreement_risk_{risk_name}"
                         
-                        if any_key in consistency_metrics_global:
+                        if disagree_key in consistency_metrics_global:
                             print(f"\n{risk_name}:")
-                            print(f"Inconsistency (any): {consistency_metrics_global[any_key]:.6f} (expected: 0.0)")
-                            print(f"Inconsistency (distance): {consistency_metrics_global[dist_key]:.6f} (expected: 0.0)")
                             print(f"Patient disagreement: {consistency_metrics_global[disagree_key]:.6f} (expected: 0.0)")
                     
-                    if "consistency_global/inconsistency_any_macro" in consistency_metrics_global:
+                    if "consistency_global/patient_disagreement_macro" in consistency_metrics_global:
                         print(f"\nMacro Averages (Global Thresholds):")
-                        print(f"Inconsistency (any): {consistency_metrics_global['consistency_global/inconsistency_any_macro']:.6f} (expected: 0.0)")
-                        print(f"Inconsistency (distance): {consistency_metrics_global['consistency_global/inconsistency_distance_macro']:.6f} (expected: 0.0)")
                         print(f"Patient disagreement: {consistency_metrics_global['consistency_global/patient_disagreement_macro']:.6f} (expected: 0.0)")
                     
                     all_test_metrics.update(consistency_metrics_global)
