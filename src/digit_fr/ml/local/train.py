@@ -146,7 +146,7 @@ def main(config: ExperimentConfig):
         
         print(f"Training on device: {trainer.device}")
         config.input_size = n_features
-        log_experiment_config(config, model, pos_weights, allow_val_change=True)
+        log_experiment_config(config, model, pos_weights)
         
         results = trainer.fit(train_loader, val_loader=val_loader, epochs=config.epochs)
         
