@@ -1,0 +1,18 @@
+{
+  "AlveolarOsteitis": {
+    "low_medium": 0.034834800000000006,
+    "medium_high": 0.08112000000000001
+  },
+  "SecondaryInfection": {
+    "low_medium": 0.0273,
+    "medium_high": 0.06125
+  },
+  "NerveDysesthesia": {
+    "low_medium": 0.0008747999999999999,
+    "medium_high": 0.004725000000000001
+  },
+  "Bleeding": {
+    "low_medium": 0.00399,
+    "medium_high": 0.0105
+  }
+}
