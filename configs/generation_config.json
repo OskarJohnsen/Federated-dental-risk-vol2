@@ -2,8 +2,8 @@
   "description": "Configuration for synthetic dataset generation parameters",
   
   "dataset": {
-    "n_clients": 3500,
-    "patients_per_client": 200,
+    "n_clients": 10,
+    "patients_per_client": 10000,
     "random_seed": 42,
     "version": "1.0",
     "description": "Total dataset size = n_clients × patients_per_client"

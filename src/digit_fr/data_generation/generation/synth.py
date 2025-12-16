@@ -65,14 +65,14 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
         prof = _get_profile(client_profiles, c)
         n = patients_per_client
 
-        if iid_type == "iid":
-            Age_mu = IID_AGE_MU
-            Proximity_p = IID_PROXIMITY_P
-            Depth_probs = IID_DEPTH_PROBS
-        else:
+        if iid_type == "non-iid":
             Age_mu = prof["prevalence_shift"].get("Age_mu", IID_AGE_MU)
             Proximity_p = prof["prevalence_shift"].get("Proximity_Nerve_p", IID_PROXIMITY_P)
             Depth_probs = prof["prevalence_shift"].get("Impaction_Depth", IID_DEPTH_PROBS)
+        else:
+            Age_mu = IID_AGE_MU
+            Proximity_p = IID_PROXIMITY_P
+            Depth_probs = IID_DEPTH_PROBS
 
         age = _generate_age(n, mu=Age_mu)
         sex = _generate_binary(n, 0.5)
@@ -131,7 +131,7 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
 
     df = pd.DataFrame(rows)
 
-    if iid_type != "iid":
+    if iid_type == "non-iid":
         for c in range(1, n_clients + 1):
             miss = _get_profile(client_profiles, c)["missingness"]
             idx = df["Client"] == c
@@ -139,7 +139,7 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
                 mask = (np.random.rand(idx.sum()) < rate)
                 df.loc[idx, col] = df.loc[idx, col].mask(mask)
 
-    if iid_type != "iid":
+    if iid_type == "non-iid":
         for c in range(1, n_clients + 1):
             df = add_feature_noise(df, c, client_profiles, configs["noise"])
 
