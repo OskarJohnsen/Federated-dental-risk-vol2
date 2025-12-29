@@ -9,7 +9,7 @@ from ..data.datasets import create_data_loaders
 from ..constants import RISK_NAMES
 from ..metrics.calc_metrics import dataset_metrics, model_metrics_categories, compute_consistency_metrics
 from ..metrics.threshold import percentile_thresholds, apply_risk_categorization, load_global_thresholds
-from ..metrics.report import log_metrics_wandb, log_dataset_info, log_experiment_config
+from ..metrics.report import log_metrics_wandb, log_dataset_info, log_experiment_config, log_partition_metadata
 from ..util.seed import all_seeds
 from ..config.experiment_config import ExperimentConfig, get_data_version
 from typing import Optional
@@ -46,6 +46,8 @@ def main(config: ExperimentConfig):
     print(f"Found {len(client_ids)} clients: {client_ids}")
     
     global_thresholds = load_global_thresholds(root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json'))
+    
+    log_partition_metadata(global_thresholds)
     
     all_client_metrics = {}
     all_client_thresholds = {}

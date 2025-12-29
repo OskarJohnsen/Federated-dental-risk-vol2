@@ -39,6 +39,29 @@ def log_experiment_config(config: ExperimentConfig, model: torch.nn.Module, clas
     if config_updates:
         wandb.config.update(config_updates, allow_val_change=True)
 
+def log_partition_metadata(global_thresholds: Dict[str, Any]):
+    if "_partition_metadata" not in global_thresholds:
+        return
+    
+    partition_meta = global_thresholds["_partition_metadata"]
+    config_updates = {
+        "partition/beta": partition_meta.get("beta"),
+        "partition/label_column": partition_meta.get("label_column"),
+        "partition/iid_type": partition_meta.get("iid_type"),
+    }
+    
+    if "heterogeneity_metrics" in partition_meta:
+        for metric_name, value in partition_meta["heterogeneity_metrics"].items():
+            config_updates[f"partition/{metric_name}"] = value
+    
+    if "beta_qty" in partition_meta:
+        config_updates["partition/beta_qty"] = partition_meta.get("beta_qty")
+        if "quantity_skew_metrics" in partition_meta:
+            for metric_name, value in partition_meta["quantity_skew_metrics"].items():
+                config_updates[f"partition/quantity_skew_{metric_name}"] = value
+    
+    wandb.config.update(config_updates, allow_val_change=True)
+
 def log_dataset_info(dataset_metrics_dict: Dict[str, Any], risk_names: list = None):
     if risk_names is None:
         risk_names = RISK_NAMES

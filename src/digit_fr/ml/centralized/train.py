@@ -9,7 +9,7 @@ from ..data.datasets import create_data_loaders
 from ..constants import RISK_NAMES
 from ..metrics.calc_metrics import dataset_metrics, model_metrics_categories, compute_consistency_metrics
 from ..metrics.threshold import percentile_thresholds, apply_risk_categorization, load_global_thresholds
-from ..metrics.report import log_metrics_wandb, log_dataset_info, log_experiment_config
+from ..metrics.report import log_metrics_wandb, log_dataset_info, log_experiment_config, log_partition_metadata
 import pandas as pd
 from ..util.seed import all_seeds
 from ..config.experiment_config import ExperimentConfig, get_data_version
@@ -165,6 +165,8 @@ def main(config: ExperimentConfig):
     
     global_thresholds = load_global_thresholds(root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json'))
     print(f'Global threshold path: {root_path("configs", "global_thresholds", f'{DATASET}', f'global_thresholds_{IID_TYPE}.json')}')
+    
+    log_partition_metadata(global_thresholds)
     
     val_client_ids = data['val']['Client'].values
     unique_clients = np.unique(val_client_ids)
