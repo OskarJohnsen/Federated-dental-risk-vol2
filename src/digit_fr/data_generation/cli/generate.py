@@ -61,6 +61,18 @@ def main(
         "formats": fmts,
         "output_dir": str(out_dir.resolve()),
     }
+    
+    if "_partition_metadata" in global_thresholds:
+        meta["partition_metadata"] = global_thresholds["_partition_metadata"]
+        print("Partition Metadata (for WandB logging)")
+        print(f"Beta: {meta['partition_metadata']['beta']}")
+        print(f"Label Column: {meta['partition_metadata']['label_column']}")
+        print(f"IID Type: {meta['partition_metadata']['iid_type']}")
+        if "heterogeneity_metrics" in meta["partition_metadata"]:
+            print("Heterogeneity Metrics:")
+            for k, v in meta["partition_metadata"]["heterogeneity_metrics"].items():
+                print(f"  {k}: {v:.4f}")
+    
     typer.echo(json.dumps({"status": "ok", "meta": meta}, indent=2))
 
 def run():

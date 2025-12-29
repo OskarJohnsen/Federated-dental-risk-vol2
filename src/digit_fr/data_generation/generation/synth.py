@@ -1,12 +1,12 @@
 from __future__ import annotations
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from ..rules.decision.extraction import decide_row
 from ..rules.decision.removal import compute_removal_decision
 from ..rules.decision.risk import compute_risk_from_evidence
-from ..rules.noise.apply import add_feature_noise
+from ..partitioning.niid_bench_partitioning import (partition_dirichlet_label, print_partition_statistics, compute_partition_heterogeneity_metrics, partition_quantity, print_quantity_skew_statistics, compute_quantity_skew_metrics)
 
 def _get_profile(client_profiles: Dict[int, Any], client_id: int) -> Dict[str, Any]:
     return client_profiles.get(client_id, {"name": f"Clinic_{client_id}", "prevalence_shift": {}, "score_scale": {1: 1, 2: 1, 3: 1, 4: 1}, "missingness": {}})
@@ -65,16 +65,7 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
         prof = _get_profile(client_profiles, c)
         n = patients_per_client
 
-        if iid_type == "non-iid":
-            Age_mu = prof["prevalence_shift"].get("Age_mu", IID_AGE_MU)
-            Proximity_p = prof["prevalence_shift"].get("Proximity_Nerve_p", IID_PROXIMITY_P)
-            Depth_probs = prof["prevalence_shift"].get("Impaction_Depth", IID_DEPTH_PROBS)
-        else:
-            Age_mu = IID_AGE_MU
-            Proximity_p = IID_PROXIMITY_P
-            Depth_probs = IID_DEPTH_PROBS
-
-        age = _generate_age(n, mu=Age_mu)
+        age = _generate_age(n, mu=IID_AGE_MU)
         sex = _generate_binary(n, 0.5)
 
         pain = _generate_binary(n, 0.5)
@@ -89,9 +80,9 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
         mobility = _generate_categorical(n, [0, 1, 2], [0.7, 0.2, 0.1])
 
         ang = _generate_categorical(n, [1, 2, 3, 4, 5], [0.30, 0.40, 0.20, 0.09, 0.01])
-        depth = _generate_categorical(n, [1, 2, 3], Depth_probs)
+        depth = _generate_categorical(n, [1, 2, 3], IID_DEPTH_PROBS)
 
-        prox_nerve = _generate_binary(n, Proximity_p)
+        prox_nerve = _generate_binary(n, IID_PROXIMITY_P)
         root_count = _generate_categorical(n, [1, 2, 3, 4], [0.1, 0.5, 0.3, 0.1])
         root_curve = _generate_binary(n, 0.70)
         bone_density = _generate_categorical(n, [1, 2, 3], [0.4, 0.4, 0.2])
@@ -130,18 +121,6 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
             })
 
     df = pd.DataFrame(rows)
-
-    if iid_type == "non-iid":
-        for c in range(1, n_clients + 1):
-            miss = _get_profile(client_profiles, c)["missingness"]
-            idx = df["Client"] == c
-            for col, rate in miss.items():
-                mask = (np.random.rand(idx.sum()) < rate)
-                df.loc[idx, col] = df.loc[idx, col].mask(mask)
-
-    if iid_type == "non-iid":
-        for c in range(1, n_clients + 1):
-            df = add_feature_noise(df, c, client_profiles, configs["noise"])
 
     # Decisions, removal, risks (seed is controlled by caller/CLI)
     temperature = gen["decision_model"]["temperature"]
@@ -226,5 +205,75 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
         print(f"{risk_name}: Low={n_low} ({n_low/len(categories)*100:.1f}%)")
         print(f"Medium={n_med} ({n_med/len(categories)*100:.1f}%)")
         print(f"High={n_high} ({n_high/len(categories)*100:.1f}%)")
+
+    RISK_CATEGORY_COLUMNS = ["Risk_Category_AlveolarOsteitis", "Risk_Category_SecondaryInfection", "Risk_Category_NerveDysesthesia", "Risk_Category_Bleeding",]
+    
+    risk_cats = df[RISK_CATEGORY_COLUMNS].to_numpy(dtype=np.int64)
+    df["Risk_Category_Composite"] = risk_cats.max(axis=1)
+    
+    composite_cats = df["Risk_Category_Composite"].values
+    n_low_comp = (composite_cats == 0).sum()
+    n_med_comp = (composite_cats == 1).sum()
+    n_high_comp = (composite_cats == 2).sum()
+    print(f"Composite Label (max severity across all risks):")
+    print(f"Low (all risks low): {n_low_comp} ({n_low_comp/len(composite_cats)*100:.1f}%)")
+    print(f"Medium (max is medium, none high): {n_med_comp} ({n_med_comp/len(composite_cats)*100:.1f}%)")
+    print(f"High (at least one risk high): {n_high_comp} ({n_high_comp/len(composite_cats)*100:.1f}%)")
+
+    partition_beta = None
+    if iid_type == "non-iid":
+        partition_config = gen.get("partitioning", {})
+        partition_beta = partition_config.get("beta", 0.5)
+        partition_label_column = partition_config.get("label_column", "Risk_Category_Composite")
+        
+        if partition_label_column not in df.columns:
+            if "Risk_Category_Composite" in df.columns:
+                partition_label_column = "Risk_Category_Composite"
+                print(f"Warning: partition label column not found. used composite label: {partition_label_column}")
+            else:
+                available_labels = [col for col in df.columns if col.startswith("Risk_Category_")]
+                if available_labels:
+                    partition_label_column = available_labels[0]
+                    print(f"Warning: Composite label not found. used: {partition_label_column}")
+                else:
+                    print("Warning: No risk category columns.")
+                    partition_beta = None
+        
+        if partition_beta is not None:
+            print(f"Applying Label Skew Partitioning")
+            print(f"Beta: {partition_beta}")
+            print(f"Label: {partition_label_column}")
+            
+            partition_seed = gen["dataset"].get("random_seed", None)
+            
+            df = partition_dirichlet_label(df=df, n_clients=n_clients, beta=partition_beta, label_column=partition_label_column, client_column="Client", seed=partition_seed)
+            print_partition_statistics(df, partition_label_column, "Client")
+            heterogeneity_metrics = compute_partition_heterogeneity_metrics(df, partition_label_column, "Client")
+            print(f"Partition Heterogeneity Metrics")
+            for metric_name, value in heterogeneity_metrics.items():
+                print(f"{metric_name}: {value:.4f}")
+            
+            partition_metadata = {"beta": partition_beta, "label_column": partition_label_column, "iid_type": iid_type, "heterogeneity_metrics": heterogeneity_metrics}
+            
+            quantity_config = gen.get("partitioning", {}).get("quantity_skew", {})
+            beta_qty = quantity_config.get("beta", None)
+            
+            if beta_qty is not None:
+                print(f"\nApplying Quantity Skew")
+                print(f"Beta_qty: {beta_qty}")
+                
+                min_size = quantity_config.get("min_size", 1)
+                df = partition_quantity(df=df, n_clients=n_clients, beta_qty=beta_qty, label_column=partition_label_column, client_column="Client", min_size=min_size, seed=partition_seed)
+                
+                print_quantity_skew_statistics(df, "Client")
+                quantity_metrics = compute_quantity_skew_metrics(df, "Client")
+                print(f"Quantity Skew Metrics")
+                for metric_name, value in quantity_metrics.items():
+                    print(f"{metric_name}: {value:.4f}")
+                
+                partition_metadata["beta_qty"] = beta_qty
+                partition_metadata["quantity_skew_metrics"] = quantity_metrics
+            
+            global_thresholds["_partition_metadata"] = partition_metadata
 
     return df, global_thresholds
