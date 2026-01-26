@@ -12,6 +12,7 @@ from ..metrics.threshold import percentile_thresholds, apply_risk_categorization
 from ..metrics.report import log_metrics_wandb, log_dataset_info, log_experiment_config, log_partition_metadata
 import pandas as pd
 from ..util.seed import all_seeds
+from ..util.wandb_config import get_wandb_project, get_wandb_entity
 from ..config.experiment_config import ExperimentConfig, get_data_version
 from typing import Optional
 import numpy as np
@@ -21,7 +22,8 @@ def main(config: ExperimentConfig):
     all_seeds(config.model_seed)
 
     wandb.init(
-        project="digit-federated-recommenders",
+        project=get_wandb_project(),
+        entity=get_wandb_entity(),
         name=config.get_run_name(),
         config=config.to_wandb_config(),
         tags=[config.experiment_type, config.model, f"seed{config.model_seed}", config.threshold_method],

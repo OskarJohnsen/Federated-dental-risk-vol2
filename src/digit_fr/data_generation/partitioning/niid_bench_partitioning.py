@@ -3,7 +3,7 @@ Based on the approach from: https://github.com/Xtra-Computing/NIID-Bench
 Mostly AI adapted
 """
 from __future__ import annotations
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 import numpy as np
 import pandas as pd
 
@@ -147,75 +147,88 @@ def partition_quantity(df: pd.DataFrame, n_clients: int, beta_qty: float, label_
         np.random.seed(seed)
     
     total_samples = len(df)
-    labels = df[label_column].values
-    unique_labels = np.unique(labels)
+    
+    current_sizes = {}
+    for client_id in range(1, n_clients + 1):
+        current_sizes[client_id] = len(df[df[client_column] == client_id])
     
     alpha = np.full(n_clients, beta_qty)
     proportions = np.random.dirichlet(alpha)
     
-    sizes = np.round(proportions * total_samples).astype(int)
+    target_sizes = np.round(proportions * total_samples).astype(int)
     
-    size_diff = total_samples - sizes.sum()
+    size_diff = total_samples - target_sizes.sum()
     if size_diff != 0:
         if size_diff > 0:
-            largest_indices = np.argsort(sizes)[-size_diff:]
-            sizes[largest_indices] += 1
+            largest_indices = np.argsort(target_sizes)[-size_diff:]
+            target_sizes[largest_indices] += 1
         else:
-            largest_indices = np.argsort(sizes)[:abs(size_diff)]
-            sizes[largest_indices] -= 1
+            largest_indices = np.argsort(target_sizes)[:abs(size_diff)]
+            target_sizes[largest_indices] -= 1
     
-    sizes = np.maximum(sizes, min_size)
+    target_sizes_dict = {}
+    for idx, client_id in enumerate(range(1, n_clients + 1)):
+        target_size = max(min_size, target_sizes[idx])
+        current_size = current_sizes[client_id]
+        target_sizes_dict[client_id] = min(target_size, current_size)
     
-    current_total = sizes.sum()
-    if current_total != total_samples:
-        size_diff = total_samples - current_total
-        if size_diff > 0:
-            largest_indices = np.argsort(sizes)[-size_diff:]
-            sizes[largest_indices] += 1
-        else:
-            largest_indices = np.argsort(sizes)[::-1]
-            for idx in largest_indices:
-                if size_diff == 0:
-                    break
-                if sizes[idx] > min_size:
-                    reduction = min(abs(size_diff), sizes[idx] - min_size)
-                    sizes[idx] -= reduction
-                    size_diff += reduction
-    
-    label_indices: Dict[int, List[int]] = {}
-    for label in unique_labels:
-        label_indices[label] = df[df[label_column] == label].index.tolist()
+    current_total = sum(target_sizes_dict.values())
+    if current_total < total_samples:
+        remaining = total_samples - current_total
+        clients_by_capacity = sorted([(cid, current_sizes[cid] - target_sizes_dict[cid]) for cid in range(1, n_clients + 1)], key=lambda x: x[1], reverse=True)
+        for client_id, capacity in clients_by_capacity:
+            if remaining <= 0:
+                break
+            if capacity > 0:
+                add = min(remaining, capacity)
+                target_sizes_dict[client_id] += add
+                remaining -= add
     
     client_assignments: Dict[int, List[int]] = {i: [] for i in range(1, n_clients + 1)}
     
-    for label in unique_labels:
-        indices = label_indices[label]
-        n_samples_label = len(indices)
+    for client_id in range(1, n_clients + 1):
+        client_data = df[df[client_column] == client_id].copy()
+        current_size = len(client_data)
+        target_size = target_sizes_dict[client_id]
         
-        if n_samples_label == 0:
+        if current_size == 0:
             continue
         
-        shuffled_indices = np.random.permutation(indices).tolist()
-        
-        label_proportions = sizes / sizes.sum()
-        n_samples_per_client = np.round(label_proportions * n_samples_label).astype(int)
-        
-        label_diff = n_samples_label - n_samples_per_client.sum()
-        if label_diff != 0:
-            if label_diff > 0:
-                largest_indices = np.argsort(n_samples_per_client)[-label_diff:]
-                n_samples_per_client[largest_indices] += 1
-            else:
-                largest_indices = np.argsort(n_samples_per_client)[:abs(label_diff)]
-                n_samples_per_client[largest_indices] -= 1
-        
-        start_idx = 0
-        for client_id in range(1, n_clients + 1):
-            n_assigned = n_samples_per_client[client_id - 1]
-            end_idx = start_idx + n_assigned
-            assigned_indices = shuffled_indices[start_idx:end_idx]
-            client_assignments[client_id].extend(assigned_indices)
-            start_idx = end_idx
+        if target_size >= current_size:
+            client_assignments[client_id] = client_data.index.tolist()
+        else:
+            label_groups = {}
+            for label in client_data[label_column].unique():
+                label_mask = client_data[label_column] == label
+                label_groups[label] = client_data[label_mask].index.tolist()
+            
+            selected_indices = []
+            for label, indices in label_groups.items():
+                n_label_current = len(indices)
+                if n_label_current == 0:
+                    continue
+                
+                label_proportion = n_label_current / current_size
+                n_label_target = max(1, int(np.round(label_proportion * target_size)))
+                n_label_target = min(n_label_target, n_label_current)
+                
+                selected = np.random.choice(indices, size=n_label_target, replace=False).tolist()
+                selected_indices.extend(selected)
+            
+            n_selected = len(selected_indices)
+            if n_selected != target_size:
+                if n_selected > target_size:
+                    excess = n_selected - target_size
+                    remove_indices = np.random.choice(selected_indices, size=excess, replace=False)
+                    selected_indices = [idx for idx in selected_indices if idx not in remove_indices]
+                elif n_selected < target_size and n_selected < current_size:
+                    remaining_indices = [idx for idx in client_data.index if idx not in selected_indices]
+                    if len(remaining_indices) > 0:
+                        add_count = min(target_size - n_selected, len(remaining_indices))
+                        add_indices = np.random.choice(remaining_indices, size=add_count, replace=False).tolist()
+                        selected_indices.extend(add_indices)
+            
+            client_assignments[client_id] = selected_indices
     
     df_partitioned = df.copy()
     df_partitioned[client_column] = 0
