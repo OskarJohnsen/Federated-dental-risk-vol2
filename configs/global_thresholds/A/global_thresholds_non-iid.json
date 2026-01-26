@@ -27,13 +27,31 @@
     },
     "beta_qty": 0.7,
     "quantity_skew_metrics": {
-      "min_size": 98,
-      "max_size": 18442,
+      "min_size": 929,
+      "max_size": 11324,
       "mean_size": 5000.0,
-      "std_size": 5738.050069492248,
-      "coefficient_of_variation": 1.1476100138984497,
-      "imbalance_ratio": 188.18367346938774,
-      "gini_coefficient": 0.5833759999999999
+      "std_size": 3275.3267928559435,
+      "coefficient_of_variation": 0.6550653585711887,
+      "imbalance_ratio": 12.18945102260495,
+      "gini_coefficient": 0.3690039999999999
+    },
+    "verification_metrics": {
+      "label_dist_preservation_mean_jsd": 0.0,
+      "label_dist_preservation_max_jsd": 0.0,
+      "client_global_jsd_mean": 0.22778761474608888,
+      "client_global_jsd_max": 0.4258975862742753,
+      "pairwise_client_jsd_mean": 0.42154648497053154,
+      "pairwise_client_jsd_max": 0.981481170285671,
+      "quantity_skew_cv_before": 0.6550653585711887,
+      "quantity_skew_cv_after": 0.6550653585711887,
+      "quantity_skew_imbalance_before": 12.18945102260495,
+      "quantity_skew_imbalance_after": 12.18945102260495,
+      "mean_size_before": 5000.0,
+      "mean_size_after": 5000.0,
+      "min_size_before": 929,
+      "min_size_after": 929,
+      "max_size_before": 11324,
+      "max_size_after": 11324
     }
   }
 }
