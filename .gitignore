@@ -213,6 +213,7 @@ __marimo__/
 # Experiment results and artifacts
 results/
 checkpoints/
+configs/global_thresholds/A/sweep_beta/
 *.pt
 *.pth
 *.ckpt
