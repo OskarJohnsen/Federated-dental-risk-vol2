@@ -1,4 +1,4 @@
-# DIGIT Federated Recommenders
+# Federated Dental Risk Prediction
 
 A federated learning system for predicting post-operative complications following wisdom tooth extraction. The project consists of two main components:
 
