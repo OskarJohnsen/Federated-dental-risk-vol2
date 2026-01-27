@@ -19,7 +19,7 @@ def load_raw_data(dataset_path: Optional[str] = None):
     
     target_probabilities = ["Risk_AlveolarOsteitis_Prob", "Risk_SecondaryInfection_Prob", "Risk_NerveDysesthesia_Prob", "Risk_Bleeding_Prob"]
 
-    all_target_cols = target_classification + target_categories
+    all_target_cols = target_classification + target_categories + ["Risk_Category_Composite"]
     X = df.drop(columns=leakage_cols + all_target_cols)
     y_classification = df[target_classification]
     
@@ -54,7 +54,7 @@ def load_global_test_set(test_set_path: Optional[str] = None, preprocessing_pipe
 
     optional_cols = ['Client'] + target_probabilities
     
-    all_target_cols = target_classification + target_categories
+    all_target_cols = target_classification + target_categories + ["Risk_Category_Composite"]
     feature_cols = [col for col in df.columns if col not in all_target_cols + optional_cols]
     X_test = df[feature_cols].copy()
     y_test = df[target_classification].copy()
