@@ -45,7 +45,6 @@ pip install -e .
 - **[SETUP.md](SETUP.md)** - Installation, configuration, and environment setup
 - **[DATASET_GENERATION.md](docs/DATASET_GENERATION.md)** - Detailed guide to dataset generation system
 - **[TRAINING.md](docs/TRAINING.md)** - Machine learning pipeline and training paradigms
-- **[WANDB_VISUALIZATION_BEST_PRACTICES.md](WANDB_VISUALIZATION_BEST_PRACTICES.md)** - Best practices for visualizing results
 
 ## Project Structure
 
@@ -59,7 +58,7 @@ DIGIT-Federated-Recommenders/
 ├── notebooks/            # Jupyter notebooks (EDA)
 ├── scripts/              # Utility scripts
 │   ├── export_wandb_run.py    # Export WandB run to CSV
-│   └── visualize_results.py   # Generate publication-quality plots
+│   └── visualize_results.py   # Generate plots
 ├── src/digit_fr/
 │   ├── data_generation/  # Dataset generation system
 │   └── ml/              # Machine learning pipeline

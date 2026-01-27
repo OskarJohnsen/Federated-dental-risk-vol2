@@ -271,7 +271,7 @@ After model inference, predicted probabilities are converted to categories using
 src/digit_fr/ml/
 ├── centralized/          # Centralized training
 │   └── train.py         # Main training script
-├── federated/            # Federated learning (Flower framework)
+├── federated/            # Federated learning
 │   ├── train.py         # Federated training script
 │   └── aggregation.py   # Aggregation strategies
 ├── local/                # Local training (per-client models)
@@ -361,8 +361,6 @@ After training, use the visualization scripts to analyze results:
    ```
    Generates publication-quality plots: `data/results/A/{iid_type}/*.pdf`
 
-See [WANDB_VISUALIZATION_BEST_PRACTICES.md](../WANDB_VISUALIZATION_BEST_PRACTICES.md) for detailed guidance.
-
 ## Troubleshooting
 
 ### Dataset Not Found
@@ -387,4 +385,3 @@ See [WANDB_VISUALIZATION_BEST_PRACTICES.md](../WANDB_VISUALIZATION_BEST_PRACTICE
 
 - See [DATASET_GENERATION.md](DATASET_GENERATION.md) for dataset generation
 - See [SETUP.md](../SETUP.md) for environment setup
-- See [WANDB_VISUALIZATION_BEST_PRACTICES.md](../WANDB_VISUALIZATION_BEST_PRACTICES.md) for result visualization
