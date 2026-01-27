@@ -211,12 +211,14 @@ marimo/_lsp/
 __marimo__/
 
 # Experiment results and artifacts
-results/
 checkpoints/
 **/sweep_beta/
 *.pt
 *.pth
 *.ckpt
-data/raw/
 wandb/
-/data/
+
+# Data directories
+# Raw datasets are large and reproducible
+data/raw/
+data/processed/
