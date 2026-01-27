@@ -175,7 +175,7 @@ def main(config: ExperimentConfig):
     
     print(f"\nFound {len(unique_clients)} clients in validation set")
     
-    if config.category_strategy in ["per_client", "both"]:
+    if config.category_strategy in ["per_client", "both"] and test_probs is not None:
         print("PER-CLIENT CATEGORY EVAL")
         val_metrics = trainer.evaluate(val_loader, thresholds=None)
         val_probs = val_metrics.get("_probs")
@@ -234,7 +234,7 @@ def main(config: ExperimentConfig):
                         
                         all_test_metrics.update(consistency_metrics_per_client)
     
-    if config.category_strategy in ["global", "both"]:
+    if config.category_strategy in ["global", "both"] and test_probs is not None:
         print("GLOBAL CATEGORY EVAL")
         
         global_pred_categories = apply_risk_categorization(test_probs, global_thresholds, risk_names=RISK_NAMES)
