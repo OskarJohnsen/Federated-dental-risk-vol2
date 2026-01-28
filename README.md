@@ -14,7 +14,7 @@ A federated learning system for predicting post-operative complications followin
 git clone https://github.com/smoothyy3/DIGIT-Federated-Recommenders
 cd DIGIT-Federated-Recommenders
 
-# Install the package (recommended: use a virtual environment)
+# Install the package
 pip install -e .
 ```
 
