@@ -32,7 +32,15 @@ def create_global_test_set(dataset_path: Path, output_path: Path, n_samples: int
         raise FileNotFoundError(f"Dataset not found at: {dataset_path}")
     
     print(f"Creating global test set")
-    print(f"Dataset: {dataset_path}")
+    # Print relative paths
+    proj_root = None
+    try:
+        from ..core.paths import root_path
+        proj_root = root_path()
+        rel_dataset_path = Path(dataset_path).relative_to(proj_root)
+        print(f"Dataset: {rel_dataset_path}")
+    except ValueError:
+        print(f"Dataset: {dataset_path}")
     print(f"Test samples: {n_samples:,}")
     print(f"Seed: {seed}")
     
@@ -45,7 +53,14 @@ def create_global_test_set(dataset_path: Path, output_path: Path, n_samples: int
     # Create backup if requested
     if backup_original:
         backup_path = dataset_path.parent / f"{dataset_path.stem}_backup{dataset_path.suffix}"
-        print(f"Creating backup: {backup_path}")
+        if proj_root:
+            try:
+                rel_backup_path = backup_path.relative_to(proj_root)
+                print(f"Creating backup: {rel_backup_path}")
+            except ValueError:
+                print(f"Creating backup: {backup_path}")
+        else:
+            print(f"Creating backup: {backup_path}")
         df_original.to_csv(backup_path, index=False)
     
     # Split dataset
@@ -90,7 +105,14 @@ def create_global_test_set(dataset_path: Path, output_path: Path, n_samples: int
     
     ensure_dir(output_path.parent)
     df_test.to_csv(output_path, index=False)
-    print(f"  Test set saved to: {output_path}")
+    if proj_root:
+        try:
+            rel_output_path = output_path.relative_to(proj_root)
+            print(f"  Test set saved to: {rel_output_path}")
+        except ValueError:
+            print(f"  Test set saved to: {output_path}")
+    else:
+        print(f"  Test set saved to: {output_path}")
     
     df_remaining.to_csv(dataset_path, index=False)
     print(f"Updated original dataset: removed {len(df_test):,} test samples")

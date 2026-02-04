@@ -41,7 +41,7 @@
     "formats": ["csv", "xlsx"],
     "output_dir": "../../data/raw/",
     "filename_base": "placeholder",
-    "description": "Output files: fed_recommenders_synthetic_dataset.csv and .xlsx"
+    "description": "Output files: synthetic_dataset_{DATASET}_{IID_TYPE}.csv and .xlsx"
   },
   
   "metadata": {

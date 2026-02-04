@@ -17,7 +17,7 @@ def train(experiment_type: str = typer.Argument()):
             experiment_id=f"{DATASET}_{IID_TYPE}",
             model_seed=42,
             data_split_seed=42,
-            dataset_path=str(root_path('data', 'raw', f'fed_recommenders_synthetic_dataset_{DATASET}_{IID_TYPE}.csv')),
+            dataset_path=str(root_path('data', 'raw', f'synthetic_dataset_{DATASET}_{IID_TYPE}.csv')),
             test_set_path=str(root_path('data', 'processed', f'{DATASET}', f'global_test_set_{IID_TYPE}.csv')),
         )
         train_centralized(config)
@@ -28,7 +28,7 @@ def train(experiment_type: str = typer.Argument()):
             experiment_id=f"{DATASET}_{IID_TYPE}",
             model_seed=42,
             data_split_seed=42,
-            dataset_path=str(root_path('data', 'raw', f'fed_recommenders_synthetic_dataset_{DATASET}_{IID_TYPE}.csv')),
+            dataset_path=str(root_path('data', 'raw', f'synthetic_dataset_{DATASET}_{IID_TYPE}.csv')),
             test_set_path=str(root_path('data', 'processed', f'{DATASET}', f'global_test_set_{IID_TYPE}.csv')),
         )
         train_local(config)
@@ -39,7 +39,7 @@ def train(experiment_type: str = typer.Argument()):
             experiment_id=f"{DATASET}_{IID_TYPE}",
             model_seed=42,
             data_split_seed=42,
-            dataset_path=str(root_path('data', 'raw', f'fed_recommenders_synthetic_dataset_{DATASET}_{IID_TYPE}.csv')),
+            dataset_path=str(root_path('data', 'raw', f'synthetic_dataset_{DATASET}_{IID_TYPE}.csv')),
             test_set_path=str(root_path('data', 'processed', f'{DATASET}', f'global_test_set_{IID_TYPE}.csv')),
             federated_rounds=6,
             clients_per_round=None,

@@ -15,9 +15,9 @@ import sys
 from pathlib import Path
 import pandas as pd
 import wandb
-from digit_fr.core.paths import ensure_dir, root_path
-from digit_fr.ml.constants import DATASET, IID_TYPE
-from digit_fr.ml.util.wandb_config import get_wandb_project, get_wandb_entity
+from fdrp.core.paths import ensure_dir, root_path
+from fdrp.ml.constants import DATASET, IID_TYPE
+from fdrp.ml.util.wandb_config import get_wandb_project, get_wandb_entity
 
 def export_run_to_csv(run_id: str, project: str = None, entity: str = None, output_path: Path = None) -> Path:
     """

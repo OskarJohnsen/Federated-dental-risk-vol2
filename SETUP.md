@@ -1,6 +1,6 @@
 # Setup Guide
 
-This guide covers installation, configuration, and environment setup for the DIGIT Federated Recommenders project.
+This guide covers installation, configuration, and environment setup for the Federated Dental Risk Prediction project.
 
 ## Installation
 
@@ -13,8 +13,8 @@ This guide covers installation, configuration, and environment setup for the DIG
 
 ```bash
 # Clone the repository
-git clone https://github.com/smoothyy3/DIGIT-Federated-Recommenders
-cd DIGIT-Federated-Recommenders
+git clone https://github.com/smoothyy3/federated-dental-risk-prediction
+cd federated-dental-risk-prediction
 
 # Create a virtual environment (recommended)
 python -m venv venv
@@ -40,7 +40,7 @@ WandB is used for experiment tracking. Each user should configure their own Wand
    ```bash
    export WANDB_PROJECT=your-project-name
    ```
-   Defaults to `digit-federated-recommenders` if not set.
+   Defaults to `federated-dental-risk-prediction` if not set.
 
 3. **Configure Entity** (optional):
    ```bash
@@ -73,7 +73,7 @@ python -c "import wandb; print(f'Project: {wandb.api.default_project()}')"
 
 ## Dataset Configuration
 
-The project uses constants defined in `src/digit_fr/ml/constants.py`:
+The project uses constants defined in `src/fdrp/ml/constants.py`:
 - `DATASET`: Dataset identifier (default: "A")
 - `IID_TYPE`: IID or non-IID partitioning (default: "non-iid")
 
@@ -93,9 +93,9 @@ Key directories:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `WANDB_PROJECT` | WandB project name | `digit-federated-recommenders` |
+| `WANDB_PROJECT` | WandB project name | `federated-dental-risk-prediction` |
 | `WANDB_ENTITY` | WandB entity/username | Logged-in user |
-| `DIGIT_FR_ROOT` | Project root directory | Auto-detected |
+| `FDRP_ROOT` | Project root directory | Auto-detected |
 
 ## Troubleshooting
 
@@ -111,7 +111,7 @@ Key directories:
 
 ### Path Resolution Issues
 - The project auto-detects the root directory by looking for `pyproject.toml` and `configs/`
-- If detection fails, set `DIGIT_FR_ROOT` environment variable to the project root
+- If detection fails, set `FDRP_ROOT` environment variable to the project root
 
 ## Next Steps
 

@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 import torch
 import torch.nn as nn
-from digit_fr.ml.models.base.model import BaseModel
+from fdrp.ml.models.base.model import BaseModel
 
 class MLP(BaseModel):
     """

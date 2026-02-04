@@ -5,7 +5,7 @@ import torch.nn as nn
 
 class BaseModel(nn.Module, ABC):
     """
-    Abstract base class for all models in the digit_fr package.
+    Abstract base class for all models in the fdrp package.
     """
 
     def __init__(self, input_size: int, n_classification_classes: Optional[int] = None):

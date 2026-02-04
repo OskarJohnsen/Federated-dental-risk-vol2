@@ -27,7 +27,6 @@ def load_all_configs(force_reload: bool = False) -> Dict[str, Any]:
     generation = _read_json(cdir / "generation_config.json")
     extraction_types = _read_json(cdir / "extraction_type_stats.json")
     extraction_binary = _read_json(cdir / "extraction_binary_stats.json")
-    noise = _read_json(cdir / "noise_config.json")
     risks = _read_json(cdir / "risk_stats.json")
 
     _validate_risk_stats(risks)
@@ -48,7 +47,6 @@ def load_all_configs(force_reload: bool = False) -> Dict[str, Any]:
         "extraction_types": extraction_types,
         "extraction_binary": extraction_binary,
         "client_profiles": client_profiles,
-        "noise": noise,
         "risks": risks,
     }
     return _CACHE

@@ -107,7 +107,7 @@ def main(config: ExperimentConfig):
     )
     
     if config.dataset_path is None:
-        config.dataset_path = str(root_path('data', 'raw', 'fed_recommenders_synthetic_dataset_50k.csv'))
+        config.dataset_path = str(root_path('data', 'raw', f'synthetic_dataset_{DATASET}_{IID_TYPE}.csv'))
     if config.test_set_path is None:
         config.test_set_path = str(root_path('data', 'processed', 'global_test_set.csv'))
     

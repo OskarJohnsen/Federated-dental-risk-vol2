@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from digit_fr.core.paths import root_path
-from digit_fr.ml.constants import DATASET, IID_TYPE, RISK_NAMES
+from fdrp.core.paths import root_path
+from fdrp.ml.constants import DATASET, IID_TYPE, RISK_NAMES
 
 def find_metric_values(df, pattern):
     """

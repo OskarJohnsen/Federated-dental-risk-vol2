@@ -4,7 +4,7 @@ import os
 def get_project_root() -> Path:
     """Resolve the repository root robustly.
     """
-    env_root = os.getenv("DIGIT_FR_ROOT")
+    env_root = os.getenv("FDRP_ROOT")
     if env_root:
         p = Path(env_root).expanduser().resolve()
         if p.exists():

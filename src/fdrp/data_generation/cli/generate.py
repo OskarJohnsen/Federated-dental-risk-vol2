@@ -7,7 +7,7 @@ from ..config.loader import load_all_configs
 from ..generation.synth import generate_dataset
 from ..splits import create_global_test_set
 from ...core.paths import ensure_dir, root_path
-from digit_fr.ml.constants import DATASET, IID_TYPE
+from fdrp.ml.constants import DATASET, IID_TYPE
 
 app = typer.Typer(add_completion=False)
 
@@ -32,7 +32,7 @@ def main(
     df, global_thresholds = generate_dataset(configs)
 
     cfg_out_dir = configs["generation"]["output"]["output_dir"]
-    base = f"fed_recommenders_synthetic_dataset_{DATASET}_{IID_TYPE}"
+    base = f"synthetic_dataset_{DATASET}_{IID_TYPE}"
     proj_root = root_path()
     # Resolve output directory
     if output_dir is not None:
@@ -56,7 +56,9 @@ def main(
     configs_dir = proj_root.joinpath("configs")
     ensure_dir(configs_dir)
     thresholds_path = configs_dir / "global_thresholds" / f"{DATASET}" / f"global_thresholds_{IID_TYPE}.json"
-    print(f"\nSaving global thresholds: {thresholds_path}")
+    # Print relative path from project root
+    rel_thresholds_path = thresholds_path.relative_to(proj_root)
+    print(f"\nSaving global thresholds: {rel_thresholds_path}")
     ensure_dir(thresholds_path.parent)
     with thresholds_path.open("w") as f:
         json.dump(global_thresholds, f, indent=2)

@@ -12,7 +12,7 @@ def get_wandb_project() -> str:
     """
     Get WandB project name from environment variable.
     
-    Defaults to 'digit-federated-recommenders' if not set.
+    Defaults to 'federated-dental-risk-prediction' if not set.
     
     Users can override by setting WANDB_PROJECT environment variable:
         export WANDB_PROJECT=my-project-name
@@ -20,7 +20,7 @@ def get_wandb_project() -> str:
     Returns:
         WandB project name string
     """
-    return os.getenv("WANDB_PROJECT", "digit-federated-recommenders")
+    return os.getenv("WANDB_PROJECT", "federated-dental-risk-prediction")
 
 
 def get_wandb_entity() -> Optional[str]:

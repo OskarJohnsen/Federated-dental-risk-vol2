@@ -10,16 +10,16 @@ The dataset generator creates synthetic patient records across multiple dental c
 
 ```bash
 # Generate dataset with default settings
-digit-fr-generate
+fdrp-generate
 
 # Generate with custom seed
-digit-fr-generate --seed 42
+fdrp-generate --seed 42
 
 # Generate without test set
-digit-fr-generate --no-create-test-set
+fdrp-generate --no-create-test-set
 
 # Generate with custom output directory
-digit-fr-generate --output-dir /path/to/output
+fdrp-generate --output-dir /path/to/output
 ```
 
 ## Medical Domain
@@ -118,7 +118,7 @@ The system uses a **rule-based scoring system** with softmax selection:
 5. **Softmax Selection**: Temperature-scaled softmax (temperature=1.0) converts scores to probabilities
 6. **Decision Sampling**: Random selection based on computed probabilities
 
-**Code Location**: `src/digit_fr/data_generation/rules/decision/extraction.py`
+**Code Location**: `src/fdrp/data_generation/rules/decision/extraction.py`
 
 ### Step 4: Risk Percentage Calculation (Target)
 
@@ -129,7 +129,7 @@ For each of the four risk types, the system computes a **risk probability** usin
 risk = base_incidence × ∏(risk_modifiers) × ∏(interactions) × surgery_modifier
 ```
 
-**Process** (`src/digit_fr/data_generation/rules/decision/risk.py`):
+**Process** (`src/fdrp/data_generation/rules/decision/risk.py`):
 
 1. **Initialize**: Start with `base_incidence` from `configs/risk_stats.json`
 2. **Apply Risk Modifiers**: For each feature in `risk_modifiers`:
@@ -163,7 +163,7 @@ risk = 0.02 × 1.0 × 1.4 × 1.8 × 0.70 = 0.03528 (3.52%)
 
 After computing the risk probability, the system performs a **Bernoulli trial** to determine the binary outcome:
 
-**Process** (`src/digit_fr/data_generation/generation/synth.py`):
+**Process** (`src/fdrp/data_generation/generation/synth.py`):
 ```python
 alveolar_risk = compute_risk_from_evidence(row, "AlveolarOsteitis", configs["risks"], d)
 alveolar_risk_binary = int(np.random.rand() < alveolar_risk)
@@ -188,7 +188,7 @@ alveolar_risk_binary = int(np.random.rand() < alveolar_risk)
 
 The **key labels** for evaluation are **risk categories**, not the binary outcomes. Categories are computed using **percentiles** on the risk probabilities:
 
-**Process** (`src/digit_fr/data_generation/generation/synth.py`, lines 177-212):
+**Process** (`src/fdrp/data_generation/generation/synth.py`, lines 177-212):
 
 1. **Percentile Calculation**: For each risk type, compute 33rd and 67th percentiles of risk probabilities
    - `p33 = np.percentile(prob_values, 33)`
@@ -230,7 +230,7 @@ The system uses **NIID-Bench** partitioning (Dirichlet distribution) to create I
   - **Label Skew**: Different clients have different label distributions
   - **Quantity Skew**: Different clients have different amounts of data
 
-**Code Location**: `src/digit_fr/data_generation/partitioning/niid_bench_partitioning.py`
+**Code Location**: `src/fdrp/data_generation/partitioning/niid_bench_partitioning.py`
 
 ## Configuration Files
 
@@ -239,7 +239,6 @@ The system uses **NIID-Bench** partitioning (Dirichlet distribution) to create I
 - **`configs/extraction_binary_stats.json`**: Removal indication rules
 - **`configs/generation_config.json`**: Dataset size, decision model parameters (temperature, noise)
 - **`configs/client_profiles.json`**: Client-specific variations (prevalence shifts, score scales, missingness)
-- **`configs/noise_config.json`**: Feature noise parameters
 
 ## Output
 
@@ -267,7 +266,7 @@ The generator produces:
 ## CLI Options
 
 ```bash
-digit-fr-generate [OPTIONS]
+fdrp-generate [OPTIONS]
 
 Options:
   --seed INT              Random seed override (default: from config)
@@ -282,7 +281,7 @@ Options:
 ## Code Structure
 
 ```
-src/digit_fr/data_generation/
+src/fdrp/data_generation/
 ├── cli/
 │   └── generate.py          # CLI entry point
 ├── config/
@@ -308,25 +307,25 @@ src/digit_fr/data_generation/
 ### Basic Generation
 ```bash
 # Generate dataset with defaults
-digit-fr-generate
+fdrp-generate
 ```
 
 ### Custom Seed
 ```bash
 # Reproducible generation
-digit-fr-generate --seed 42
+fdrp-generate --seed 42
 ```
 
 ### Multiple Formats
 ```bash
 # Generate both CSV and Excel
-digit-fr-generate --formats csv,xlsx
+fdrp-generate --formats csv,xlsx
 ```
 
 ### Without Test Set
 ```bash
 # Skip test set creation
-digit-fr-generate --no-create-test-set
+fdrp-generate --no-create-test-set
 ```
 
 ## Troubleshooting

@@ -11,8 +11,8 @@ A federated learning system for predicting post-operative complications followin
 
 ```bash
 # Clone the repository
-git clone https://github.com/smoothyy3/DIGIT-Federated-Recommenders
-cd DIGIT-Federated-Recommenders
+git clone https://github.com/smoothyy3/federated-dental-risk-prediction
+cd federated-dental-risk-prediction
 
 # Install the package
 pip install -e .
@@ -23,21 +23,21 @@ pip install -e .
 1. **Configure WandB** (required for training):
    ```bash
    wandb login
-   export WANDB_PROJECT=your-project-name  # Optional, defaults to 'digit-federated-recommenders'
+   export WANDB_PROJECT=your-project-name  # Optional, defaults to 'federated-dental-risk-prediction'
    ```
    See [SETUP.md](SETUP.md) for detailed setup instructions.
 
 2. **Generate a dataset**:
    ```bash
-   digit-fr-generate
+   fdrp-generate
    ```
    This creates a synthetic dataset and automatically generates a global test set.
 
 3. **Train a model**:
    ```bash
-   digit-fr-train centralized    # Centralized training
-   digit-fr-train local          # Local (per-client) training
-   digit-fr-train federated      # Federated learning
+   fdrp-train centralized    # Centralized training
+   fdrp-train local          # Local (per-client) training
+   fdrp-train federated      # Federated learning
    ```
 
 ## Documentation
@@ -49,7 +49,7 @@ pip install -e .
 ## Project Structure
 
 ```
-DIGIT-Federated-Recommenders/
+federated-dental-risk-prediction/
 ├── configs/              # Configuration files (JSON)
 ├── data/                 # Generated datasets and results
 │   ├── raw/             # Raw datasets (excluded from git)
@@ -59,7 +59,7 @@ DIGIT-Federated-Recommenders/
 ├── scripts/              # Utility scripts
 │   ├── export_wandb_run.py    # Export WandB run to CSV
 │   └── visualize_results.py   # Generate plots
-├── src/digit_fr/
+├── src/fdrp/
 │   ├── data_generation/  # Dataset generation system
 │   └── ml/              # Machine learning pipeline
 └── pyproject.toml        # Package configuration
@@ -87,7 +87,7 @@ DIGIT-Federated-Recommenders/
 
 ### Dataset Generation
 ```bash
-digit-fr-generate [OPTIONS]
+fdrp-generate [OPTIONS]
 
 Options:
   --seed INT              Random seed override
@@ -101,7 +101,7 @@ Options:
 
 ### Training
 ```bash
-digit-fr-train {centralized|local|federated}
+fdrp-train {centralized|local|federated}
 ```
 
 ## Medical Domain

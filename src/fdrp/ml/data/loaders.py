@@ -7,10 +7,11 @@ from ..util.seed import data_seeds
 from typing import Optional
 from ..config.experiment_config import ExperimentConfig
 from .preprocessing import PreprocessingPipeline
+from ..constants import DATASET, IID_TYPE
 
 def load_raw_data(dataset_path: Optional[str] = None):
     if dataset_path is None:
-        dataset_path = root_path('data', 'raw', 'fed_recommenders_synthetic_dataset_50k.csv')
+        dataset_path = root_path('data', 'raw', f'synthetic_dataset_{DATASET}_{IID_TYPE}.csv')
     df = pd.read_csv(dataset_path)
     
     target_classification = ["Risk_AlveolarOsteitis", "Risk_SecondaryInfection", "Risk_NerveDysesthesia", "Risk_Bleeding"]

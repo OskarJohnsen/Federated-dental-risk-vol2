@@ -15,13 +15,13 @@ The ML pipeline supports three training paradigms:
 
 ```bash
 # Centralized training
-digit-fr-train centralized
+fdrp-train centralized
 
 # Local (per-client) training
-digit-fr-train local
+fdrp-train local
 
 # Federated learning
-digit-fr-train federated
+fdrp-train federated
 ```
 
 ## Prerequisites
@@ -34,7 +34,7 @@ digit-fr-train federated
 
 ### MLP (Multi-Layer Perceptron)
 
-**Location**: `src/digit_fr/ml/models/architectures/mlp.py`
+**Location**: `src/fdrp/ml/models/architectures/mlp.py`
 
 **Architecture**:
 - **Input Layer**: Size = number of features (after preprocessing, typically ~30-35)
@@ -51,7 +51,7 @@ digit-fr-train federated
 
 ## Training Pipeline
 
-### Step 1: Data Loading (`src/digit_fr/ml/data/loaders.py`)
+### Step 1: Data Loading (`src/fdrp/ml/data/loaders.py`)
 
 1. **Load Raw Data**: Read CSV file
 2. **Feature/Target Separation**:
@@ -74,7 +74,7 @@ digit-fr-train federated
 
 ### Step 2: Model Initialization
 
-**Location**: `src/digit_fr/ml/centralized/train.py` (lines 55-60)
+**Location**: `src/fdrp/ml/centralized/train.py` (lines 55-60)
 
 - Creates MLP with configurable architecture
 - Input size determined from preprocessed data
@@ -97,7 +97,7 @@ digit-fr-train federated
 - Reduces learning rate by factor `gamma` every `step_size` epochs
 - Default: step_size=5, gamma=0.5
 
-### Step 4: Training Loop (`src/digit_fr/ml/models/base/trainer.py`)
+### Step 4: Training Loop (`src/fdrp/ml/models/base/trainer.py`)
 
 **BaseTrainer.fit()**:
 1. **Forward Pass**: Model predicts logits for 4 risks
@@ -111,7 +111,7 @@ digit-fr-train federated
 
 **Problem**: Binary classification with imbalanced classes requires optimal thresholds (not always 0.5)
 
-**Methods** (`src/digit_fr/ml/metrics/threshold.py`):
+**Methods** (`src/fdrp/ml/metrics/threshold.py`):
 
 1. **Youden's J Index** (default):
    - Maximizes: `J = Sensitivity + Specificity - 1`
@@ -128,14 +128,14 @@ digit-fr-train federated
 - Select threshold that optimizes the chosen metric
 - Apply optimized thresholds to test set predictions
 
-### Step 6: Evaluation (`src/digit_fr/ml/models/base/trainer.py`)
+### Step 6: Evaluation (`src/fdrp/ml/models/base/trainer.py`)
 
 **Important**: Models are **trained on binary risk outcomes**, but **evaluated on risk categories**. This is because the Bernoulli draw introduces too much noise for models to accurately predict the exact small percentages.
 
 **BaseTrainer.evaluate()**:
 1. **Inference**: Model in eval mode, no gradients
 2. **Probability Conversion**: Apply sigmoid to logits → probabilities
-3. **Evaluation Metrics** (`src/digit_fr/ml/metrics/calc_metrics.py`):
+3. **Evaluation Metrics** (`src/fdrp/ml/metrics/calc_metrics.py`):
 
    **A. Probability Metrics** (comparing predicted probabilities to true risk probabilities):
    - **MSE** (Mean Squared Error): Per-risk and macro-averaged
@@ -155,7 +155,7 @@ digit-fr-train federated
 
 ### Step 7: Risk Categorization and Evaluation
 
-**Risk Categorization** (`src/digit_fr/ml/metrics/threshold.py`):
+**Risk Categorization** (`src/fdrp/ml/metrics/threshold.py`):
 
 After model inference, predicted probabilities are converted to categories using thresholds:
 
@@ -168,7 +168,7 @@ After model inference, predicted probabilities are converted to categories using
    - **Global**: Loaded from `configs/global_thresholds/{DATASET}/global_thresholds_{IID_TYPE}.json` (computed during dataset generation)
    - **Per-Client**: Computed from validation set probabilities using `percentile_thresholds()` function
 
-3. **Category Evaluation** (`src/digit_fr/ml/metrics/calc_metrics.py`):
+3. **Category Evaluation** (`src/fdrp/ml/metrics/calc_metrics.py`):
    - Compare predicted categories to true categories (from dataset)
    - Compute F1 score and accuracy per risk type
    - Compute macro-averaged metrics across all risks
@@ -181,7 +181,7 @@ After model inference, predicted probabilities are converted to categories using
 
 ### Step 8: Logging and Reporting
 
-**WandB Integration** (`src/digit_fr/ml/metrics/report.py`):
+**WandB Integration** (`src/fdrp/ml/metrics/report.py`):
 - Logs experiment configuration (hyperparameters, data version, code version)
 - Logs training history (loss per epoch)
 - Logs dataset statistics (class distributions, imbalance ratios)
@@ -193,7 +193,7 @@ After model inference, predicted probabilities are converted to categories using
 
 ### Centralized Training
 
-**Command**: `digit-fr-train centralized`
+**Command**: `fdrp-train centralized`
 
 **Description**: Standard supervised learning where all training data is available in one place.
 
@@ -207,7 +207,7 @@ After model inference, predicted probabilities are converted to categories using
 
 ### Local Training
 
-**Command**: `digit-fr-train local`
+**Command**: `fdrp-train local`
 
 **Description**: Each client trains their own model independently on their local data.
 
@@ -224,7 +224,7 @@ After model inference, predicted probabilities are converted to categories using
 
 ### Federated Learning
 
-**Command**: `digit-fr-train federated`
+**Command**: `fdrp-train federated`
 
 **Description**: Federated learning using Flower framework. Multiple clients collaborate to train a shared model without sharing raw data.
 
@@ -237,7 +237,7 @@ After model inference, predicted probabilities are converted to categories using
    - Update global model
 3. Evaluate final global model on global test set
 
-**Configuration** (in `src/digit_fr/ml/cli.py`):
+**Configuration** (in `src/fdrp/ml/cli.py`):
 - `federated_rounds`: Number of federated rounds (default: 6)
 - `clients_per_round`: Number of clients per round (default: None = all clients)
 - `local_epochs`: Epochs per client per round (default: 5)
@@ -247,7 +247,7 @@ After model inference, predicted probabilities are converted to categories using
 
 ## Experiment Configuration
 
-**Location**: `src/digit_fr/ml/config/experiment_config.py`
+**Location**: `src/fdrp/ml/config/experiment_config.py`
 
 **ExperimentConfig** dataclass contains:
 - **Experiment Type**: `centralized`, `local`, or `federated`
@@ -262,13 +262,13 @@ After model inference, predicted probabilities are converted to categories using
 **Current Configuration** (hardcoded in CLI):
 - Model seed: 42
 - Data split seed: 42
-- Dataset path: `data/raw/fed_recommenders_synthetic_dataset_{DATASET}_{IID_TYPE}.csv`
+- Dataset path: `data/raw/synthetic_dataset_{DATASET}_{IID_TYPE}.csv`
 - Test set path: `data/processed/{DATASET}/global_test_set_{IID_TYPE}.csv`
 
 ## Code Structure
 
 ```
-src/digit_fr/ml/
+src/fdrp/ml/
 ├── centralized/          # Centralized training
 │   └── train.py         # Main training script
 ├── federated/            # Federated learning
@@ -364,9 +364,9 @@ After training, use the visualization scripts to analyze results:
 ## Troubleshooting
 
 ### Dataset Not Found
-- Ensure dataset is generated: `digit-fr-generate`
+- Ensure dataset is generated: `fdrp-generate`
 - Check dataset path matches `DATASET` and `IID_TYPE` constants
-- Verify file exists: `data/raw/fed_recommenders_synthetic_dataset_{DATASET}_{IID_TYPE}.csv`
+- Verify file exists: `data/raw/synthetic_dataset_{DATASET}_{IID_TYPE}.csv`
 
 ### WandB Errors
 - Ensure WandB is configured: `wandb login`
