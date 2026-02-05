@@ -122,7 +122,7 @@ For each β combination, compare:
 ### Current Results (No Isolation)
 Results from experiments with **no isolation** (β_L = β_Q) using 6 different beta values:
 - **Location**: `data/results/A/non-iid/sweep_beta/`
-- **Files**: `summary.pdf`, `wandb_export_all_metrics.csv`, and individual metric PDFs
+- **Files**: `summary.pdf`, `wandb_export_beta_runs.csv`, and individual metric PDFs
 - **Note**: These results are **confounded** — cannot distinguish label skew effects from quantity skew effects
 
 ### Configuration Notes
