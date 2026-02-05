@@ -213,6 +213,11 @@ __marimo__/
 # Experiment results and artifacts
 checkpoints/
 **/sweep_beta/
+# Exception: track specific files from sweep_beta results
+!data/results/A/non-iid/sweep_beta/
+data/results/A/non-iid/sweep_beta/*
+!data/results/A/non-iid/sweep_beta/summary.pdf
+!data/results/A/non-iid/sweep_beta/wandb_export_beta_runs.csv
 *.pt
 *.pth
 *.ckpt
