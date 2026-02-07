@@ -116,6 +116,15 @@ The system simulates federated learning across multiple dental clinics to predic
 
 See [DATASET_GENERATION.md](docs/DATASET_GENERATION.md) for detailed medical domain information.
 
+## Configuration
+
+The project uses constants in `src/fdrp/ml/constants.py` to control dataset paths and experiment organization:
+- `DATASET`: Dataset identifier (default: "A") - used in file paths and experiment IDs
+- `IID_TYPE`: IID or non-IID partitioning (default: "non-iid") - controls which dataset variant is used
+- `RISK_NAMES`: List of four risk types - used throughout the codebase for metrics and evaluation
+
+See [SETUP.md](SETUP.md) for detailed information about these constants and how to modify them.
+
 ## Contributing
 
 When working on this project:
@@ -123,6 +132,7 @@ When working on this project:
 - Follow the existing code structure and patterns
 - Update documentation when adding new features
 - Test changes with both IID and non-IID datasets
+- Be aware of the constants in `constants.py` as they affect file paths and experiment organization
 
 ## License
 

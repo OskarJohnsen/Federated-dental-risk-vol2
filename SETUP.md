@@ -73,11 +73,61 @@ python -c "import wandb; print(f'Project: {wandb.api.default_project()}')"
 
 ## Dataset Configuration
 
-The project uses constants defined in `src/fdrp/ml/constants.py`:
-- `DATASET`: Dataset identifier (default: "A")
-- `IID_TYPE`: IID or non-IID partitioning (default: "non-iid")
+The project uses constants defined in `src/fdrp/ml/constants.py` that control file paths, experiment IDs, and data organization:
 
-These are intentionally hardcoded for consistency across the codebase. To override, modify the constants file or use environment variables (if implemented).
+### Constants Overview
+
+- **`RISK_NAMES`**: List of the four risk types being predicted
+  - `["AlveolarOsteitis", "SecondaryInfection", "NerveDysesthesia", "Bleeding"]`
+  - Used throughout the codebase for iterating over risks, computing metrics, and generating column names
+  - **Do not modify** unless you're changing the medical domain
+
+- **`DATASET`**: Dataset identifier (default: `"A"`)
+  - Used in file paths to organize datasets and results
+  - Affects paths like:
+    - `data/raw/synthetic_dataset_{DATASET}_{IID_TYPE}.csv`
+    - `data/processed/{DATASET}/global_test_set_{IID_TYPE}.csv`
+    - `configs/global_thresholds/{DATASET}/global_thresholds_{IID_TYPE}.json`
+    - `data/results/{DATASET}/{IID_TYPE}/`
+  - Change this if you want to organize multiple dataset variants (different client size etc.)
+
+- **`IID_TYPE`**: IID or non-IID partitioning (default: `"non-iid"`)
+  - Controls which dataset variant is used: `"iid"` or `"non-iid"`
+  - Used in the same file paths as `DATASET` above
+  - Also used in experiment IDs: `{DATASET}_{IID_TYPE}`
+  - Change this to switch between IID and non-IID experiments
+
+### Where These Constants Are Used
+
+1. **Dataset Generation** (`fdrp-generate`):
+   - Output file names: `synthetic_dataset_{DATASET}_{IID_TYPE}.csv`
+   - Test set paths: `data/processed/{DATASET}/global_test_set_{IID_TYPE}.csv`
+   - Threshold file paths: `configs/global_thresholds/{DATASET}/global_thresholds_{IID_TYPE}.json`
+
+2. **Training** (`fdrp-train`):
+   - Dataset loading paths
+   - Experiment IDs for WandB logging
+   - Results directory organization
+
+3. **Visualization** (`scripts/visualize_results.py`):
+   - Results directory paths: `data/results/{DATASET}/{IID_TYPE}/`
+   - Risk name iteration for plotting
+
+### Changing Constants
+
+These constants are intentionally hardcoded for consistency across the codebase. To change them:
+
+1. **Edit `src/fdrp/ml/constants.py`** directly:
+   ```python
+   DATASET = 'B'  # Change from 'A' to 'B'
+   IID_TYPE = 'iid'  # Change from 'non-iid' to 'iid'
+   ```
+
+2. **Ensure matching files exist**:
+   - If changing `DATASET` or `IID_TYPE`, make sure the corresponding dataset files exist
+   - Generate new datasets with `fdrp-generate` if needed
+
+3. **Note**: Changing these constants affects **all** commands (generate, train, visualize), so ensure consistency across your workflow.
 
 ## Project Structure
 
