@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from ..constants import RISK_NAMES
 from sklearn.model_selection import train_test_split
 from .aggregation import federated_averaging
+from .aggregation import balanced_federated_averaging
 from ..metrics.calc_metrics import dataset_metrics, model_metrics_categories, compute_consistency_metrics
 from ..metrics.threshold import percentile_thresholds, apply_risk_categorization, load_global_thresholds
 from ..metrics.report import log_metrics_wandb, log_dataset_info, log_experiment_config, log_partition_metadata
@@ -46,13 +47,13 @@ def load_client_data_with_global_pipeline(full_data: dict, client_id: int, globa
     
     return result
 
-def train_client_locally(model: torch.nn.Module, client_data: dict, config: ExperimentConfig, local_epochs: int) -> Tuple[torch.nn.Module, int]:
+def train_client_locally(model: torch.nn.Module, client_data: dict, config: ExperimentConfig, local_epochs: int) -> Tuple[torch.nn.Module, int, np.ndarray]:
     y_train = client_data["train"]["y_classification"]
     n_samples = len(y_train)
-    
+    pos_counts = y_train.sum(axis=0).values.astype(float) 
+
     pos_weights = None
     if config.use_class_weights:
-        pos_counts = y_train.sum(axis=0).values.astype(float)
         total = len(y_train)
         neg_counts = total - pos_counts
         eps = 1e-6
@@ -86,7 +87,7 @@ def train_client_locally(model: torch.nn.Module, client_data: dict, config: Expe
     
     trainer.fit(train_loader, val_loader=val_loader, epochs=local_epochs)
     
-    return model, n_samples
+    return model, n_samples, pos_counts
 
 def main(config: ExperimentConfig):
     all_seeds(config.model_seed)
@@ -113,6 +114,11 @@ def main(config: ExperimentConfig):
     
     if config.data_version is None:
         config.data_version = get_data_version(config.dataset_path)
+
+    agg_name = (config.aggregation_method or "fedavg").lower()
+    if agg_name not in ["fedavg", "balanced"]:
+        raise ValueError(f"Unknown aggregation_method: {agg_name}. Use 'fedavg' or 'balanced'.")
+    print(f"Aggregation method: {agg_name}")
     
     print(f"{config.experiment_type.upper()} TRAINING")
     print(f"Experiment ID: {config.experiment_id}")
@@ -206,6 +212,7 @@ def main(config: ExperimentConfig):
         
         client_weights = []
         client_sample_counts = []
+        client_pos_counts = []
         
         for client_id in selected_clients:
             print(f"\nTraining Client {client_id}...")
@@ -213,14 +220,19 @@ def main(config: ExperimentConfig):
 
             client_model = copy.deepcopy(global_model)
             
-            client_model, n_samples = train_client_locally(client_model, client_data, config, config.local_epochs)
+            client_model, n_samples, pos_counts = train_client_locally(client_model, client_data, config, config.local_epochs)
             
+            client_pos_counts.append(pos_counts)
             client_weights.append(client_model.state_dict())
             client_sample_counts.append(n_samples)
             print(f"Client {client_id}: {n_samples:,} training samples")
         
         print(f"\nAggregating weights from {len(selected_clients)} clients...")
-        aggregated_weights = federated_averaging(client_weights, client_sample_counts)
+        if agg_name == "balanced":
+            aggregated_weights = balanced_federated_averaging(client_weights, client_sample_counts, client_pos_counts)
+        else:
+            aggregated_weights = federated_averaging(client_weights, client_sample_counts)
+
         
         global_model.load_state_dict(aggregated_weights)
         
