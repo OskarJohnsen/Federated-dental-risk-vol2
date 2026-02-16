@@ -39,13 +39,13 @@ pip install -e .
    fdrp-train local          # Local (per-client) training
    fdrp-train federated      # Federated learning
    ```
-    On 16/02 we added the option for different aggregation methods.  
-The default aggregation method is FedAvg. Use
+   On 16/02 we added the option for different aggregation methods.  
+   The default aggregation method is FedAvg. Use
    ```bash
    fdrp-train federated --aggregation-method balanced	or
    fdrp-train federated -a balanced
   ```
-for aggregation weighted by number of complications
+   for aggregation weighted by number of complications
 
 
 ## Documentation
