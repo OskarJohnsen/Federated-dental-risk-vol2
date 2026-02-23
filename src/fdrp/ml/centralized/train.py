@@ -18,9 +18,7 @@ from typing import Optional
 import numpy as np
 from ..constants import DATASET, IID_TYPE
 
-def main(config: ExperimentConfig,
-         only_evaluate: bool = False,
-         checkpoint : Optional[str]=None):
+def main(config: ExperimentConfig):
     all_seeds(config.model_seed)
 
     wandb.init(
@@ -139,26 +137,6 @@ def main(config: ExperimentConfig,
     print(f"Training on device: {trainer.device}")
     config.input_size = n_features
     log_experiment_config(config, model, pos_weights)
-
-    if only_evaluate:
-        if checkpoint is None:
-            raise ValueError("checkpoint must be provided when only_evaluate=True")
-
-        print("\nEVALUATION ONLY MODE")
-        print(f"Loading checkpoint: {checkpoint}")
-
-        trainer.load_checkpoint(checkpoint)
-
-        print("EVAL GLOBAL TEST SET")
-        test_metrics = trainer.evaluate(test_loader, thresholds=None)
-
-        print("\nEvaluation results:")
-        for k, v in test_metrics.items():
-            if not k.startswith("_"):
-                print(f"{k}: {v}")
-
-    wandb.finish()
-    return
 
     results = trainer.fit(train_loader, val_loader=val_loader, epochs=config.epochs)
 

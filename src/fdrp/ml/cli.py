@@ -60,51 +60,6 @@ def train(experiment_type: str = typer.Argument(), aggregation_method: str = typ
             aggregation_method=agg,
         )
         train_federated(config)
-    
-@app.command()
-def evaluate(
-    experiment_type: str = typer.Argument(),
-    checkpoint: str = typer.Argument()
-):
-    if experiment_type == "centralized":
-        from .centralized.train import main as train_centralized
-        config = ExperimentConfig(
-            experiment_type="centralized",
-            experiment_id=f"{DATASET}_{IID_TYPE}",
-            model_seed=42,
-            data_split_seed=42,
-            dataset_path=str(root_path('data', 'raw', f'synthetic_dataset_{DATASET}_{IID_TYPE}.csv')),
-            test_set_path=str(root_path('data', 'processed', f'{DATASET}', f'global_test_set_{IID_TYPE}.csv')),
-        )
-        train_centralized(config, only_evaluate=True, checkpoint=checkpoint)
-
-    elif experiment_type == "local":
-        from .local.train import main as train_local
-        config = ExperimentConfig(
-            experiment_type="local",
-            experiment_id=f"{DATASET}_{IID_TYPE}",
-            model_seed=42,
-            data_split_seed=42,
-            dataset_path=str(root_path('data', 'raw', f'synthetic_dataset_{DATASET}_{IID_TYPE}.csv')),
-            test_set_path=str(root_path('data', 'processed', f'{DATASET}', f'global_test_set_{IID_TYPE}.csv')),
-        )
-        train_local(config, only_evaluate=True, checkpoint=checkpoint)
-    elif experiment_type == "federated":
-        from .federated.train import main as train_federated
-        config = ExperimentConfig(
-            experiment_type="federated",
-            experiment_id=f"{DATASET}_{IID_TYPE}",
-            model_seed=42,
-            data_split_seed=42,
-            dataset_path=str(root_path('data', 'raw', f'synthetic_dataset_{DATASET}_{IID_TYPE}.csv')),
-            test_set_path=str(root_path('data', 'processed', f'{DATASET}', f'global_test_set_{IID_TYPE}.csv')),
-            federated_rounds=6,
-            clients_per_round=None,
-            local_epochs=5,
-            aggregation_method="fedavg",
-        )
-        train_federated(config)
-
 
 def run():
     app()
