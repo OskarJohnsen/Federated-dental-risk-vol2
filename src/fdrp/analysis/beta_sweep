@@ -25,7 +25,7 @@ from fdrp.ml.centralized.train import main as run_centralized
 from fdrp.ml.local.train import main as run_local
 from fdrp.ml.federated.train import main as run_federated
 
-# Grid
+# Grid:
 BETA_L_VALUES = [0.1,0.5,1.0,1.5,2.0,10.0]
 BETA_Q_VALUES = [0.1,0.5,1.0,1.5,2.0,10.0]
 
