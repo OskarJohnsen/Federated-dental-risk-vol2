@@ -1,0 +1,7 @@
+paradigm,beta_L,beta_Q,seed
+centralized,10.0,0.1,42
+local,10.0,0.1,42
+federated,10.0,0.1,42
+centralized,10.0,0.5,42
+local,10.0,0.5,42
+federated,10.0,0.5,42
