@@ -250,13 +250,20 @@ def main(config: ExperimentConfig):
     elif config.category_strategy in ["per_client", "both"]:
         print("Only one client model: skipping per-client consistency metrics")
     
-    # Global
+        # Global
     if config.category_strategy in ["global", "both"] and len(all_client_categorizations_global) > 1:
         print("\nCONSISTENCY METRICS: Global Thresholds (Local Models)")
         print("(Different models, same global thresholds)")
         
-        categorizations_for_consistency = {k: v.astype(np.int32) for k, v in all_client_categorizations_global.items()}
-        consistency_metrics_global = compute_consistency_metrics(categorizations=categorizations_for_consistency, prefix="consistency_global", risk_names=RISK_NAMES, client_ids=client_ids)
+        categorizations_for_consistency = {
+            k: v.astype(np.int32) for k, v in all_client_categorizations_global.items()
+        }
+        consistency_metrics_global = compute_consistency_metrics(
+            categorizations=categorizations_for_consistency,
+            prefix="consistency_global",
+            risk_names=RISK_NAMES,
+            client_ids=client_ids,
+        )
         
         if consistency_metrics_global:
             for risk_name in RISK_NAMES:
@@ -267,16 +274,45 @@ def main(config: ExperimentConfig):
                     print(f"Patient disagreement: {consistency_metrics_global[disagree_key]:.4f}")
             
             if "consistency_global/patient_disagreement_macro" in consistency_metrics_global:
-                print(f"\nMacro Averages (Global Thresholds):")
-                print(f"Patient disagreement: {consistency_metrics_global['consistency_global/patient_disagreement_macro']:.4f}")
+                print("\nMacro Averages (Global Thresholds):")
+                print(
+                    f"Patient disagreement: "
+                    f"{consistency_metrics_global['consistency_global/patient_disagreement_macro']:.4f}"
+                )
             
             log_metrics_wandb(consistency_metrics_global, prefix="")
     elif config.category_strategy in ["global", "both"]:
         print("Only one client model: skipping global consistency metrics")
     
+    # --- Byg summary_metrics til sweepet ------------------------------------
+    summary_metrics = {}
+
+    # 1) Probability-metrics: gennemsnit over klienter
+    #    (vi tager alle nøgler der starter med mse_/mae_/ece_prob_)
+    prob_values_per_key: dict[str, list[float]] = {}
+
+    for cid in client_ids:
+        cm = all_client_metrics.get(cid, {})
+        for key, value in cm.items():
+            if key.startswith(("mse_", "mae_", "ece_prob_")) and value is not None:
+                prob_values_per_key.setdefault(key, []).append(float(value))
+
+    for key, vals in prob_values_per_key.items():
+        if vals:
+            summary_metrics[key] = float(np.mean(vals))
+
+    # 2) Tilføj consistency-metrics (Fleiss κ, disagreement, osv.)
+    if "consistency_metrics_per_client" in locals() and consistency_metrics_per_client:
+        summary_metrics.update(consistency_metrics_per_client)
+    if "consistency_metrics_global" in locals() and consistency_metrics_global:
+        summary_metrics.update(consistency_metrics_global)
+
     print(f"\nTrained {len(client_ids)} client models")
     print("\nDone")
     wandb.finish()
+    return summary_metrics
+
 
 if __name__ == '__main__':
     main()
+

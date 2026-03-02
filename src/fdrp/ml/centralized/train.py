@@ -283,10 +283,11 @@ def main(config: ExperimentConfig):
                     
                     all_test_metrics.update(consistency_metrics_global)
     
-    log_metrics_wandb(all_test_metrics, prefix="test/")
+        log_metrics_wandb(all_test_metrics, prefix="test/")
     
     print("\nDone")
     wandb.finish()
+    return all_test_metrics   # 👈 NY LINJE
 
 if __name__ == '__main__':
     main()

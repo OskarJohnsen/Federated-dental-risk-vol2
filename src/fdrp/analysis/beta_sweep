@@ -26,8 +26,9 @@ from fdrp.ml.local.train import main as run_local
 from fdrp.ml.federated.train import main as run_federated
 
 # Grid
-BETA_L_VALUES = [10.0]
-BETA_Q_VALUES = [0.1, 0.5]
+BETA_L_VALUES = [0.1,0.5,1.0,1.5,2.0,10.0]
+BETA_Q_VALUES = [0.1,0.5,1.0,1.5,2.0,10.0]
+
 PARADIGMS = ["centralized", "local", "federated"]
 
 SUMMARY_PATH = Path(
@@ -196,9 +197,9 @@ def config_for_run(
     if paradigm == "federated":
         # vælg nogle fornuftige defaults – dem kan du altid tweake
         if getattr(cfg, "federated_rounds", None) is None:
-            cfg.federated_rounds = 6   # fx 10 runder
+            cfg.federated_rounds = 6   
         if getattr(cfg, "local_epochs", None) is None:
-            cfg.local_epochs = 5        # fx 1 epoch pr. runde
+            cfg.local_epochs = 5       
 
     return cfg
 
@@ -211,8 +212,8 @@ def extract_summary_row(
     metrics: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
-    Vælg de vigtigste metrics ud af metrics-dict'et og lav en række til summary.csv.
-    Tilpas nøgle-navne her til hvad dine scripts faktisk genererer.
+    Bygger én række til summary.csv ud fra metrics-dict'et.
+    Her vælger vi F1, MSE, ECE og Fleiss κ (macro).
     """
     row: Dict[str, Any] = {
         "paradigm": paradigm,
@@ -221,12 +222,22 @@ def extract_summary_row(
         "seed": seed,
     }
 
-    # Probability-metrics (hvis de findes)
+    # --- 1) Probability-metrics (MSE/ECE/MAE) -------------------------------
+    # Globale macro-metrics (navnene skal matche dem du får fra evaluate)
     for key in ["mse_macro", "mae_macro", "ece_prob_macro"]:
         if key in metrics:
             row[key] = metrics[key]
 
-    # Global / per-client F1 pr. risiko
+    # Hvis du hellere vil have pr. risiko:
+    for risk in RISK_NAMES:
+        mse_key = f"mse_risk_{risk}"
+        ece_key = f"ece_prob_risk_{risk}"
+        if mse_key in metrics:
+            row[f"MSE_{risk}"] = metrics[mse_key]
+        if ece_key in metrics:
+            row[f"ECE_{risk}"] = metrics[ece_key]
+
+    # --- 2) F1 global og per klient -----------------------------------------
     for risk in RISK_NAMES:
         f1_global_key = f"category_global_f1_macro_risk_{risk}"
         if f1_global_key in metrics:
@@ -236,11 +247,27 @@ def extract_summary_row(
         if f1_pc_key in metrics:
             row[f"F1_per_client_{risk}"] = metrics[f1_pc_key]
 
-    # Consistency (macro)
+    # --- 3) Konsistens-metrics: Fleiss κ + disagreement ---------------------
+
+    # patient disagreement
     if "consistency_per_client/patient_disagreement_macro" in metrics:
-        row["disagreement_per_client_macro"] = metrics["consistency_per_client/patient_disagreement_macro"]
+        row["disagreement_per_client_macro"] = metrics[
+            "consistency_per_client/patient_disagreement_macro"
+        ]
     if "consistency_global/patient_disagreement_macro" in metrics:
-        row["disagreement_global_macro"] = metrics["consistency_global/patient_disagreement_macro"]
+        row["disagreement_global_macro"] = metrics[
+            "consistency_global/patient_disagreement_macro"
+        ]
+
+    # Fleiss kappa (macro)
+    if "consistency_per_client/fleiss_kappa_macro" in metrics:
+        row["fleiss_kappa_per_client_macro"] = metrics[
+            "consistency_per_client/fleiss_kappa_macro"
+        ]
+    if "consistency_global/fleiss_kappa_macro" in metrics:
+        row["fleiss_kappa_global_macro"] = metrics[
+            "consistency_global/fleiss_kappa_macro"
+        ]
 
     return row
 
