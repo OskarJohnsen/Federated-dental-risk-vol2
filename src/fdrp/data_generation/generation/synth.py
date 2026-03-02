@@ -38,7 +38,7 @@ def prob_bisphosphonates_given_age_osteoporosis(age: int, has_osteoporosis: bool
             else:
                 return 0.003
 
-def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, Dict[str, float]]]:
+def generate_dataset(configs: Dict[str, Any],beta: float | None = None, beta_qty: float | None = None) -> Tuple[pd.DataFrame, Dict[str, Dict[str, float]]]:
     gen = configs["generation"]
     extraction_cfg = configs["extraction_types"]
     binary_cfg = configs["extraction_binary"]
@@ -223,7 +223,8 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
     partition_beta = None
     if iid_type == "non-iid":
         partition_config = gen.get("partitioning", {})
-        partition_beta = partition_config.get("beta", 0.5)
+        config_beta = partition_config.get("beta", 0.5)
+        partition_beta = beta if beta is not None else config_beta
         partition_label_column = partition_config.get("label_column", "Risk_Category_Composite")
         
         if partition_label_column not in df.columns:
@@ -256,14 +257,17 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
             partition_metadata = {"beta": partition_beta, "label_column": partition_label_column, "iid_type": iid_type, "heterogeneity_metrics": heterogeneity_metrics}
             
             quantity_config = gen.get("partitioning", {}).get("quantity_skew", {})
-            beta_qty = quantity_config.get("beta", None)
+            config_beta_qty = quantity_config.get("beta", None)
+            effective_beta_qty = beta_qty if beta_qty is not None else config_beta_qty
             
-            if beta_qty is not None:
+
+
+            if effective_beta_qty is not None:
                 print(f"\nApplying Quantity Skew")
-                print(f"Beta_qty: {beta_qty}")
+                print(f"Beta_qty: {effective_beta_qty}")
                 
                 min_size = quantity_config.get("min_size", 1)
-                df = partition_quantity(df=df, n_clients=n_clients, beta_qty=beta_qty, label_column=partition_label_column, client_column="Client", min_size=min_size, seed=partition_seed)
+                df = partition_quantity(df=df, n_clients=n_clients, beta_qty=effective_beta_qty, label_column=partition_label_column, client_column="Client", min_size=min_size, seed=partition_seed)
                 
                 print_quantity_skew_statistics(df, "Client")
                 quantity_metrics = compute_quantity_skew_metrics(df, "Client")
@@ -271,7 +275,7 @@ def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, D
                 for metric_name, value in quantity_metrics.items():
                     print(f"{metric_name}: {value:.4f}")
                 
-                partition_metadata["beta_qty"] = beta_qty
+                partition_metadata["beta_qty"] = effective_beta_qty
                 partition_metadata["quantity_skew_metrics"] = quantity_metrics
             
             global_thresholds["_partition_metadata"] = partition_metadata

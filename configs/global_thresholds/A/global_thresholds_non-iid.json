@@ -25,7 +25,7 @@
       "client_label_diversity": 2.8,
       "label_imbalance_ratio": 4990.787037037037
     },
-    "beta_qty": 0.7,
+    "beta_qty": 0.3,
     "quantity_skew_metrics": {
       "min_size": 929,
       "max_size": 11324,
