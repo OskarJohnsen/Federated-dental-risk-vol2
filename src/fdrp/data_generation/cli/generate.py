@@ -20,6 +20,8 @@ def main(
     test_samples: int = typer.Option(3000, help="Number of samples in test set"),
     test_seed: int = typer.Option(999, help="Random seed for test set splitting"),
     backup: bool = typer.Option(True, help="Create backup of original dataset"),
+    beta: float = typer.Option(0.5, help="Dirichlet label skew parameter"),
+    beta_qty: float = typer.Option(0.5, help="Dirichlet quantity skew parameter"),
 ):
     """Generate the synthetic dataset and optionally create a global test set"""
     configs = load_all_configs()
@@ -29,7 +31,7 @@ def main(
     else:
         np.random.seed(configs["generation"]["dataset"]["random_seed"])
 
-    df, global_thresholds = generate_dataset(configs)
+    df, global_thresholds = generate_dataset(configs, beta=beta, beta_qty=beta_qty)
 
     cfg_out_dir = configs["generation"]["output"]["output_dir"]
     base = f"synthetic_dataset_{DATASET}_{IID_TYPE}"
