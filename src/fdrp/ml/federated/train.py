@@ -350,58 +350,73 @@ def main(config: ExperimentConfig):
                                 
                                 all_test_metrics.update(consistency_metrics_per_client)
     
-    if config.category_strategy in ["global", "both"] and test_probs is not None:
-        print("\nGLOBAL CATEGORY EVAL")
+        if config.category_strategy in ["global", "both"] and test_probs is not None:
+            print("\nGLOBAL CATEGORY EVAL")
         
-        global_pred_categories = apply_risk_categorization(test_probs, global_thresholds, risk_names=RISK_NAMES)
+            global_pred_categories = apply_risk_categorization(test_probs, global_thresholds, risk_names=RISK_NAMES)
         
-        if test_true_categories is not None:
-            global_cat_metrics = model_metrics_categories(global_pred_categories, test_true_categories, risk_names=RISK_NAMES, prefix="category_global")
-            all_test_metrics.update(global_cat_metrics)
-            for risk_name in RISK_NAMES:
-                acc_key = f"category_global_accuracy_risk_{risk_name}"
-                f1_key = f"category_global_f1_macro_risk_{risk_name}"
-                if acc_key in global_cat_metrics:
-                    print(f"{risk_name}: Accuracy={global_cat_metrics[acc_key]:.4f}, F1-macro={global_cat_metrics[f1_key]:.4f}")
+            if test_true_categories is not None:
+                global_cat_metrics = model_metrics_categories(global_pred_categories, test_true_categories, risk_names=RISK_NAMES, prefix="category_global")
+                all_test_metrics.update(global_cat_metrics)
+                for risk_name in RISK_NAMES:
+                    acc_key = f"category_global_accuracy_risk_{risk_name}"
+                    f1_key = f"category_global_f1_macro_risk_{risk_name}"
+                    if acc_key in global_cat_metrics:
+                        print(f"{risk_name}: Accuracy={global_cat_metrics[acc_key]:.4f}, F1-macro={global_cat_metrics[f1_key]:.4f}")
         
-        test_client_ids = test_data.get('Client')
-        if test_client_ids is not None:
-            if isinstance(test_client_ids, pd.Series):
-                test_client_ids_arr = test_client_ids.values
-            else:
-                test_client_ids_arr = np.array(test_client_ids)
+            test_client_ids = test_data.get('Client')
+            if test_client_ids is not None:
+                if isinstance(test_client_ids, pd.Series):
+                    test_client_ids_arr = test_client_ids.values
+                else:
+                    test_client_ids_arr = np.array(test_client_ids)
             
-            unique_test_clients = np.unique(test_client_ids_arr)
+                unique_test_clients = np.unique(test_client_ids_arr)
             
-            if len(unique_test_clients) > 1:
-                print("\nCONSISTENCY METRICS: Global Thresholds")
-                print("(Sanity check: Should be 0.0)")
+                if len(unique_test_clients) > 1:
+                    print("\nCONSISTENCY METRICS: Global Thresholds")
+                    print("(Sanity check: Should be 0.0)")
                 
-                global_categorizations_sanity = {}
-                for client_id in sorted(unique_test_clients):
-                    global_categorizations_sanity[client_id] = global_pred_categories
+                    global_categorizations_sanity = {}
+                    for client_id in sorted(unique_test_clients):
+                        global_categorizations_sanity[client_id] = global_pred_categories
                 
-                consistency_metrics_global = compute_consistency_metrics(categorizations=global_categorizations_sanity, prefix="consistency_global", risk_names=RISK_NAMES, client_ids=sorted(unique_test_clients))
+                    consistency_metrics_global = compute_consistency_metrics(categorizations=global_categorizations_sanity, prefix="consistency_global", risk_names=RISK_NAMES, client_ids=sorted(unique_test_clients))
                 
-                if consistency_metrics_global:
-                    for risk_name in RISK_NAMES:
-                        disagree_key = f"consistency_global/patient_disagreement_risk_{risk_name}"
+                    if consistency_metrics_global:
+                        for risk_name in RISK_NAMES:
+                            disagree_key = f"consistency_global/patient_disagreement_risk_{risk_name}"
                         
-                        if disagree_key in consistency_metrics_global:
-                            print(f"\n{risk_name}:")
-                            print(f"Patient disagreement: {consistency_metrics_global[disagree_key]:.6f} (expected: 0.0)")
+                            if disagree_key in consistency_metrics_global:
+                                print(f"\n{risk_name}:")
+                                print(f"Patient disagreement: {consistency_metrics_global[disagree_key]:.6f} (expected: 0.0)")
                     
-                    if "consistency_global/patient_disagreement_macro" in consistency_metrics_global:
-                        print(f"\nMacro Averages (Global Thresholds):")
-                        print(f"Patient disagreement: {consistency_metrics_global['consistency_global/patient_disagreement_macro']:.6f} (expected: 0.0)")
+                        if "consistency_global/patient_disagreement_macro" in consistency_metrics_global:
+                            print(f"\nMacro Averages (Global Thresholds):")
+                            print(f"Patient disagreement: {consistency_metrics_global['consistency_global/patient_disagreement_macro']:.6f} (expected: 0.0)")
                     
-                    all_test_metrics.update(consistency_metrics_global)
+                        all_test_metrics.update(consistency_metrics_global)
     
-        log_metrics_wandb(all_test_metrics, prefix="test/")
-    
-    print("\nDone")
-    wandb.finish()
-    return all_test_metrics   
+            log_metrics_wandb(all_test_metrics, prefix="test/")
+
+        # Build summary macro metrics for sweep / plotting
+        def add_macro_summary(metrics_dict: dict, input_prefix: str, output_key: str):
+            vals = []
+            for risk in RISK_NAMES:
+                key = f"{input_prefix}{risk}"
+                if key in metrics_dict and metrics_dict[key] is not None:
+                    vals.append(float(metrics_dict[key]))
+            if vals:
+                metrics_dict[output_key] = float(np.mean(vals))
+
+        add_macro_summary(all_test_metrics, "category_global_f1_macro_risk_", "f1_global_macro")
+        add_macro_summary(all_test_metrics, "category_per_client_f1_macro_risk_", "f1_per_client_macro")
+        add_macro_summary(all_test_metrics, "mse_risk_", "mse_macro")
+        add_macro_summary(all_test_metrics, "ece_prob_risk_", "ece_macro")
+
+        print("\nDone")
+        wandb.finish()
+        return all_test_metrics
 
 if __name__ == '__main__':
     main()

@@ -26,8 +26,10 @@ from fdrp.ml.local.train import main as run_local
 from fdrp.ml.federated.train import main as run_federated
 
 # Grid:
-BETA_L_VALUES = [0.1,0.5,1.0,1.5,2.0,10.0]
-BETA_Q_VALUES = [0.1,0.5,1.0,1.5,2.0,10.0]
+#BETA_L_VALUES = [0.1,0.5,1.0,1.5,2.0,10.0]
+#BETA_Q_VALUES = [0.1,0.5,1.0,1.5,2.0,10.0]
+BETA_L_VALUES = [0.1]
+BETA_Q_VALUES = [0.1]
 
 PARADIGMS = ["centralized", "local", "federated"]
 
@@ -222,9 +224,8 @@ def extract_summary_row(
         "seed": seed,
     }
 
-    # --- 1) Probability-metrics (MSE/ECE/MAE) -------------------------------
-    # Globale macro-metrics (navnene skal matche dem du får fra evaluate)
-    for key in ["mse_macro", "mae_macro", "ece_prob_macro"]:
+    # --- 1) Macro-metrics ---------------------------------------------------
+    for key in ["f1_global_macro", "f1_per_client_macro", "mse_macro", "ece_macro", "mae_macro", "ece_prob_macro"]:
         if key in metrics:
             row[key] = metrics[key]
 

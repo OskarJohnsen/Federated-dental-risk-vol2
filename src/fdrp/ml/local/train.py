@@ -55,6 +55,7 @@ def main(config: ExperimentConfig):
     all_client_thresholds = {}
     all_client_categorizations_per_client = {}
     all_client_categorizations_global = {}
+    all_client_category_metrics = {}
     
     for client_id in client_ids:
         print(f"\nTraining Client {client_id}")
@@ -203,6 +204,11 @@ def main(config: ExperimentConfig):
                 global_cat_metrics = model_metrics_categories(global_pred_categories, test_true_categories,risk_names=RISK_NAMES, prefix=f"client_{client_id}/test/category_global")
                 client_test_metrics.update(global_cat_metrics)
         
+        all_client_category_metrics[client_id] = {
+        k: v for k, v in client_test_metrics.items()
+        if "/test/category_" in k
+        }
+
         all_client_metrics[client_id] = final_metrics
         all_client_thresholds[client_id] = categorization_boundaries
         
@@ -288,7 +294,6 @@ def main(config: ExperimentConfig):
     summary_metrics = {}
 
     # 1) Probability-metrics: gennemsnit over klienter
-    #    (vi tager alle nøgler der starter med mse_/mae_/ece_prob_)
     prob_values_per_key: dict[str, list[float]] = {}
 
     for cid in client_ids:
@@ -301,17 +306,47 @@ def main(config: ExperimentConfig):
         if vals:
             summary_metrics[key] = float(np.mean(vals))
 
-    # 2) Tilføj consistency-metrics (Fleiss κ, disagreement, osv.)
+    # 2) Category-metrics: gennemsnit over klienter
+    category_values_per_key: dict[str, list[float]] = {}
+
+    for cid in client_ids:
+        cm = all_client_category_metrics.get(cid, {})
+        for key, value in cm.items():
+            if value is None:
+                continue
+
+            clean_key = key.replace(f"client_{cid}/test/", "")
+            category_values_per_key.setdefault(clean_key, []).append(float(value))
+
+    for key, vals in category_values_per_key.items():
+        if vals:
+            summary_metrics[key] = float(np.mean(vals))
+
+    # 3) Tilføj consistency-metrics
     if "consistency_metrics_per_client" in locals() and consistency_metrics_per_client:
         summary_metrics.update(consistency_metrics_per_client)
+
     if "consistency_metrics_global" in locals() and consistency_metrics_global:
         summary_metrics.update(consistency_metrics_global)
 
-    print(f"\nTrained {len(client_ids)} client models")
-    print("\nDone")
+    # 4) Lav færdige macro-metrics på tværs af komplikationer
+    def add_macro_summary(input_prefix: str, output_key: str):
+        vals = []
+        for risk in RISK_NAMES:
+            key = f"{input_prefix}{risk}"
+            if key in summary_metrics and summary_metrics[key] is not None:
+                vals.append(summary_metrics[key])
+        if vals:
+            summary_metrics[output_key] = float(np.mean(vals))
+
+    add_macro_summary("category_global_f1_macro_risk_", "f1_global_macro")
+    add_macro_summary("category_per_client_f1_macro_risk_", "f1_per_client_macro")
+    add_macro_summary("mse_risk_", "mse_macro")
+    add_macro_summary("ece_prob_risk_", "ece_macro")
+
+
     wandb.finish()
     return summary_metrics
-
 
 if __name__ == '__main__':
     main()
