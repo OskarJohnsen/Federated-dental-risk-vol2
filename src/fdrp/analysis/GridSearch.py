@@ -26,16 +26,13 @@ from fdrp.ml.local.train import main as run_local
 from fdrp.ml.federated.train import main as run_federated
 
 # Grid:
-#BETA_L_VALUES = [0.1,0.5,1.0,1.5,2.0,10.0]
-#BETA_Q_VALUES = [0.1,0.5,1.0,1.5,2.0,10.0]
-BETA_L_VALUES = [0.1]
-BETA_Q_VALUES = [0.1]
+BETA_L_VALUES = [0.1,0.5,1.0,1.5,2.0, 5.0, 10.0]
+BETA_Q_VALUES = [0.1,0.5,1.0,1.5,2.0, 5.0, 10.0]
 
 PARADIGMS = ["centralized", "local", "federated"]
 
-SUMMARY_PATH = Path(
-    r"C:\Users\oskar\OneDrive\Desktop\4 Semester\Dataproject\Federated-dental-risk-vol2\federated-dental-risk-prediction\src\fdrp\analysis\Results\sweep_beta_summary.csv"
-)
+SUMMARY_PATH = Path(r"C:\Users\Oskar\Desktop\sweep_beta_summary.csv")
+
 
 
 def beta_combo_name(beta_L: float, beta_Q: float) -> str:
