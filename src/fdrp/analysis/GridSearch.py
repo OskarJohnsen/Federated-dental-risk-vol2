@@ -76,6 +76,9 @@ def generate_data_for_beta_combo(
 
     gen_cfg = configs["generation"]
 
+    if "client_profiles" in gen_cfg:
+        gen_cfg["client_profiles"]["seed"] = seed
+
     # Seed: bruges både til numpy i generate.main og til random_seed i config
     if seed is not None:
         np.random.seed(seed)
@@ -96,7 +99,8 @@ def generate_data_for_beta_combo(
 
     # --- Resten følger dit generate.main ---
     cfg_out_dir = gen_cfg["output"]["output_dir"]
-    base = f"synthetic_dataset_{DATASET}_{IID_TYPE}"
+    combo = f"betaL_{beta_L}_betaQ_{beta_Q}_seed_{seed}"
+    base = f"synthetic_dataset_{DATASET}_{IID_TYPE}_{combo}"
     proj_root = root_path()
 
     # Resolve output-dir relativt til projekt-root, ligesom i generate.main
@@ -129,7 +133,12 @@ def generate_data_for_beta_combo(
     print(f"[DATA] Saved global thresholds to: {thresholds_path.relative_to(proj_root)}")
 
     # Global test set
-    test_output_path = proj_root.joinpath("data", "processed", f"{DATASET}", f"global_test_set_{IID_TYPE}.csv")
+    test_output_path = proj_root.joinpath(
+    "data",
+    "processed",
+    f"{DATASET}",
+    f"global_test_set_{IID_TYPE}_{combo}.csv"
+    )
     ensure_dir(test_output_path.parent)
 
     try:

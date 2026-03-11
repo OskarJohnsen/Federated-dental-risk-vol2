@@ -142,100 +142,53 @@ def compute_partition_heterogeneity_metrics(df: pd.DataFrame, label_column: str,
         "label_imbalance_ratio": float(avg_imbalance_ratio),
     }
 
-def partition_quantity(df: pd.DataFrame, n_clients: int, beta_qty: float, label_column: str, client_column: str = "Client", min_size: int = 1, seed: Optional[int] = None) -> pd.DataFrame:
-    if seed is not None:
-        np.random.seed(seed)
-    
+def partition_quantity(
+    df: pd.DataFrame,
+    n_clients: int,
+    beta_qty: float,
+    label_column: str,
+    client_column: str = "Client",
+    min_size: int = 1,
+    seed: Optional[int] = None,
+) -> pd.DataFrame:
+    rng = np.random.default_rng(seed)
+
     total_samples = len(df)
-    
-    current_sizes = {}
-    for client_id in range(1, n_clients + 1):
-        current_sizes[client_id] = len(df[df[client_column] == client_id])
-    
-    alpha = np.full(n_clients, beta_qty)
-    proportions = np.random.dirichlet(alpha)
-    
-    target_sizes = np.round(proportions * total_samples).astype(int)
-    
-    size_diff = total_samples - target_sizes.sum()
-    if size_diff != 0:
-        if size_diff > 0:
-            largest_indices = np.argsort(target_sizes)[-size_diff:]
-            target_sizes[largest_indices] += 1
-        else:
-            largest_indices = np.argsort(target_sizes)[:abs(size_diff)]
-            target_sizes[largest_indices] -= 1
-    
-    target_sizes_dict = {}
-    for idx, client_id in enumerate(range(1, n_clients + 1)):
-        target_size = max(min_size, target_sizes[idx])
-        current_size = current_sizes[client_id]
-        target_sizes_dict[client_id] = min(target_size, current_size)
-    
-    current_total = sum(target_sizes_dict.values())
-    if current_total < total_samples:
-        remaining = total_samples - current_total
-        clients_by_capacity = sorted([(cid, current_sizes[cid] - target_sizes_dict[cid]) for cid in range(1, n_clients + 1)], key=lambda x: x[1], reverse=True)
-        for client_id, capacity in clients_by_capacity:
-            if remaining <= 0:
-                break
-            if capacity > 0:
-                add = min(remaining, capacity)
-                target_sizes_dict[client_id] += add
-                remaining -= add
-    
-    client_assignments: Dict[int, List[int]] = {i: [] for i in range(1, n_clients + 1)}
-    
-    for client_id in range(1, n_clients + 1):
-        client_data = df[df[client_column] == client_id].copy()
-        current_size = len(client_data)
-        target_size = target_sizes_dict[client_id]
-        
-        if current_size == 0:
-            continue
-        
-        if target_size >= current_size:
-            client_assignments[client_id] = client_data.index.tolist()
-        else:
-            label_groups = {}
-            for label in client_data[label_column].unique():
-                label_mask = client_data[label_column] == label
-                label_groups[label] = client_data[label_mask].index.tolist()
-            
-            selected_indices = []
-            for label, indices in label_groups.items():
-                n_label_current = len(indices)
-                if n_label_current == 0:
-                    continue
-                
-                label_proportion = n_label_current / current_size
-                n_label_target = max(1, int(np.round(label_proportion * target_size)))
-                n_label_target = min(n_label_target, n_label_current)
-                
-                selected = np.random.choice(indices, size=n_label_target, replace=False).tolist()
-                selected_indices.extend(selected)
-            
-            n_selected = len(selected_indices)
-            if n_selected != target_size:
-                if n_selected > target_size:
-                    excess = n_selected - target_size
-                    remove_indices = np.random.choice(selected_indices, size=excess, replace=False)
-                    selected_indices = [idx for idx in selected_indices if idx not in remove_indices]
-                elif n_selected < target_size and n_selected < current_size:
-                    remaining_indices = [idx for idx in client_data.index if idx not in selected_indices]
-                    if len(remaining_indices) > 0:
-                        add_count = min(target_size - n_selected, len(remaining_indices))
-                        add_indices = np.random.choice(remaining_indices, size=add_count, replace=False).tolist()
-                        selected_indices.extend(add_indices)
-            
-            client_assignments[client_id] = selected_indices
-    
+
+    # Træk target-størrelser fra Dirichlet
+    alpha = np.full(n_clients, beta_qty, dtype=float)
+    proportions = rng.dirichlet(alpha)
+    target_sizes = np.floor(proportions * total_samples).astype(int)
+
+    # Sørg for minimumsstørrelse
+    target_sizes = np.maximum(target_sizes, min_size)
+
+    # Justér så summen bliver præcis total_samples
+    while target_sizes.sum() < total_samples:
+        i = rng.integers(0, n_clients)
+        target_sizes[i] += 1
+
+    while target_sizes.sum() > total_samples:
+        candidates = np.where(target_sizes > min_size)[0]
+        if len(candidates) == 0:
+            raise ValueError("Cannot adjust target_sizes without violating min_size.")
+        i = rng.choice(candidates)
+        target_sizes[i] -= 1
+
+    # Fordel ALLE rækker på ny efter de nye target_sizes
+    shuffled_indices = rng.permutation(df.index.to_numpy())
+
     df_partitioned = df.copy()
     df_partitioned[client_column] = 0
-    
-    for client_id, indices in client_assignments.items():
-        df_partitioned.loc[indices, client_column] = client_id
-    
+
+    start = 0
+    for client_id in range(1, n_clients + 1):
+        size = int(target_sizes[client_id - 1])
+        end = start + size
+        assigned_indices = shuffled_indices[start:end]
+        df_partitioned.loc[assigned_indices, client_column] = client_id
+        start = end
+
     return df_partitioned
 
 def get_client_sizes(df: pd.DataFrame, client_column: str = "Client") -> Dict[int, int]:
