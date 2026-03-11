@@ -26,10 +26,10 @@ from fdrp.ml.local.train import main as run_local
 from fdrp.ml.federated.train import main as run_federated
 
 # Grid:
-#BETA_L_VALUES = [0.1,0.5,1.0,1.5,2.0, 5.0, 10.0]
-#BETA_Q_VALUES = [0.1,0.5,1.0,1.5,2.0, 5.0, 10.0]
-BETA_L_VALUES = [0.1]
-BETA_Q_VALUES = [0.1, 10.0]
+BETA_L_VALUES = [0.1,0.25,0.5,0.75,1.0,1.5,2.0, 10.0]
+BETA_Q_VALUES = [0.1,0.25,0.5,0.75,1.0,1.5,2.0, 10.0]
+#BETA_L_VALUES = [0.1]
+#BETA_Q_VALUES = [0.1, 10.0]
 
 PARADIGMS = ["centralized", "local", "federated"]
 
