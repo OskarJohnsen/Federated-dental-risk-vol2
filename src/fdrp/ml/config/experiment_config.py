@@ -75,7 +75,9 @@ class ExperimentConfig:
     federated_rounds: Optional[int] = None
     clients_per_round: Optional[int] = None
     local_epochs: Optional[int] = None
-    aggregation_method: str = "fedavg"  # "fedavg" eller "balanced"
+    aggregation_method: str = "fedavg"   # "fedavg" eller "balanced"
+    federated_method: str = "fedavg"     # "fedavg" eller "fedprox"
+    fedprox_mu: float = 0.0
     
     def __post_init__(self):
         if self.code_version is None:

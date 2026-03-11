@@ -16,24 +16,24 @@
     "medium_high": 0.007
   },
   "_partition_metadata": {
-    "beta": 0.1,
+    "beta": 0.5,
     "label_column": "Risk_Category_Composite",
     "iid_type": "non-iid",
     "heterogeneity_metrics": {
-      "label_entropy_per_client": 0.3343228393965631,
+      "label_entropy_per_client": 0.7687543307598014,
       "label_entropy_global": 1.3623192760251113,
-      "client_label_diversity": 1.8888888888888888,
-      "label_imbalance_ratio": 8832.666666666666
+      "client_label_diversity": 2.8,
+      "label_imbalance_ratio": 4990.787037037037
     },
-    "beta_qty": 10.0,
+    "beta_qty": 0.5,
     "quantity_skew_metrics": {
-      "min_size": 2286,
-      "max_size": 6057,
+      "min_size": 100,
+      "max_size": 11483,
       "mean_size": 5000.0,
-      "std_size": 1035.940442303514,
-      "coefficient_of_variation": 0.20718808846070277,
-      "imbalance_ratio": 2.6496062992125986,
-      "gini_coefficient": 0.10282799999999992
+      "std_size": 3759.8310866314196,
+      "coefficient_of_variation": 0.7519662173262839,
+      "imbalance_ratio": 114.83,
+      "gini_coefficient": 0.42581999999999987
     }
   }
 }

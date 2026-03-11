@@ -47,10 +47,17 @@ def load_client_data_with_global_pipeline(full_data: dict, client_id: int, globa
     
     return result
 
-def train_client_locally(model: torch.nn.Module, client_data: dict, config: ExperimentConfig, local_epochs: int) -> Tuple[torch.nn.Module, int, np.ndarray]:
+def train_client_locally(
+    model: torch.nn.Module,
+    client_data: dict,
+    config: ExperimentConfig,
+    local_epochs: int,
+    federated_method: str = "fedavg",
+    prox_mu: float = 0.0,
+) -> Tuple[torch.nn.Module, int, np.ndarray]:
     y_train = client_data["train"]["y_classification"]
     n_samples = len(y_train)
-    pos_counts = y_train.sum(axis=0).values.astype(float) 
+    pos_counts = y_train.sum(axis=0).values.astype(float)
 
     pos_weights = None
     if config.use_class_weights:
@@ -58,35 +65,64 @@ def train_client_locally(model: torch.nn.Module, client_data: dict, config: Expe
         neg_counts = total - pos_counts
         eps = 1e-6
         max_weight = 100.0
-        pos_weights = torch.clamp( torch.tensor(neg_counts / (pos_counts + eps), dtype=torch.float32), min=1.0, max=max_weight)
+        pos_weights = torch.clamp(
+            torch.tensor(neg_counts / (pos_counts + eps), dtype=torch.float32),
+            min=1.0,
+            max=max_weight
+        )
         loss_clf = torch.nn.BCEWithLogitsLoss(pos_weight=pos_weights)
     else:
         loss_clf = torch.nn.BCEWithLogitsLoss()
-    
+
     if config.optimizer == "Adam":
-        optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
+        optimizer = torch.optim.Adam(
+            model.parameters(),
+            lr=config.learning_rate,
+            weight_decay=config.weight_decay
+        )
     elif config.optimizer == "AdamW":
-        optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
+        optimizer = torch.optim.AdamW(
+            model.parameters(),
+            lr=config.learning_rate,
+            weight_decay=config.weight_decay
+        )
     else:
         raise ValueError(f"Unknown optimizer: {config.optimizer}")
-    
+
     scheduler = None
     if config.scheduler == "StepLR":
-        scheduler = StepLR(optimizer, step_size=config.scheduler_step_size, gamma=config.scheduler_gamma)
-    
+        scheduler = StepLR(
+            optimizer,
+            step_size=config.scheduler_step_size,
+            gamma=config.scheduler_gamma
+        )
+
     train_loader, val_loader = create_data_loaders(client_data, batch_size=config.batch_size)
-    
+
+    method = federated_method.lower()
+    if method not in ["fedavg", "fedprox"]:
+        raise ValueError(f"Unknown federated_method: {federated_method}")
+
+    reference_params = None
+    effective_mu = 0.0
+
+    if method == "fedprox":
+        reference_params = get_reference_params(model)
+        effective_mu = prox_mu
+
     trainer = BaseTrainer(
         model=model,
         optimizer=optimizer,
         loss_clf=loss_clf,
         scheduler=scheduler,
         experiment_type=config.experiment_type,
-        seed=config.model_seed
+        seed=config.model_seed,
+        prox_mu=effective_mu,
+        reference_params=reference_params,
     )
-    
+
     trainer.fit(train_loader, val_loader=val_loader, epochs=local_epochs)
-    
+
     return model, n_samples, pos_counts
 
 def main(config: ExperimentConfig):
@@ -119,6 +155,19 @@ def main(config: ExperimentConfig):
     if agg_name not in ["fedavg", "balanced"]:
         raise ValueError(f"Unknown aggregation_method: {agg_name}. Use 'fedavg' or 'balanced'.")
     print(f"Aggregation method: {agg_name}")
+    
+    fed_method = getattr(config, "federated_method", "fedavg").lower()
+    if fed_method not in ["fedavg", "fedprox"]:
+        raise ValueError(f"Unknown federated_method: {fed_method}. Use 'fedavg' or 'fedprox'.")
+
+    prox_mu = float(getattr(config, "fedprox_mu", 0.0))
+
+    if fed_method == "fedavg":
+        prox_mu = 0.0
+
+    print(f"Federated training method: {fed_method}")
+    if fed_method == "fedprox":
+        print(f"FedProx mu: {prox_mu}")
     
     print(f"{config.experiment_type.upper()} TRAINING")
     print(f"Experiment ID: {config.experiment_id}")
@@ -220,7 +269,14 @@ def main(config: ExperimentConfig):
 
             client_model = copy.deepcopy(global_model)
             
-            client_model, n_samples, pos_counts = train_client_locally(client_model, client_data, config, config.local_epochs)
+            client_model, n_samples, pos_counts = train_client_locally(
+                client_model,
+                client_data,
+                config,
+                config.local_epochs,
+                federated_method=fed_method,
+                prox_mu=prox_mu,
+            )
             
             client_pos_counts.append(pos_counts)
             client_weights.append(client_model.state_dict())
@@ -417,6 +473,12 @@ def main(config: ExperimentConfig):
         print("\nDone")
         wandb.finish()
         return all_test_metrics
+
+def get_reference_params(model: torch.nn.Module) -> dict:
+    return {
+        name: param.detach().clone()
+        for name, param in model.named_parameters()
+    }
 
 if __name__ == '__main__':
     main()
