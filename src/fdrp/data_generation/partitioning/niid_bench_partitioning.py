@@ -3,259 +3,197 @@ Based on the approach from: https://github.com/Xtra-Computing/NIID-Bench
 Mostly AI adapted
 """
 from __future__ import annotations
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Optional, Dict, List
 import numpy as np
 import pandas as pd
 
-def partition_dirichlet_label(df: pd.DataFrame, n_clients: int, beta: float, label_column: str, client_column: str = "Client", seed: Optional[int] = None) -> pd.DataFrame:
-    if seed is not None:
-        np.random.seed(seed)
-    
-    labels = df[label_column].values
-    unique_labels = np.unique(labels)
-    n_classes = len(unique_labels)
-    
-    label_to_class = {label: idx for idx, label in enumerate(unique_labels)}
-    
-    class_indices: Dict[int, List[int]] = {c: [] for c in range(n_classes)}
-    df_index = df.index.tolist()
-    for pos_idx, label in enumerate(labels):
-        class_idx = label_to_class[label]
-        class_indices[class_idx].append(df_index[pos_idx])
-    
-    client_assignments: Dict[int, List[int]] = {i: [] for i in range(1, n_clients + 1)}
-    
-    for class_idx in range(n_classes):
-        indices = class_indices[class_idx]
-        n_samples_class = len(indices)
-        
-        if n_samples_class == 0:
-            continue
-        
-        alpha = np.full(n_clients, beta)
-        proportions = np.random.dirichlet(alpha)
-        
-        n_samples_per_client = np.random.multinomial(n_samples_class, proportions)
-        
-        shuffled_indices = np.random.permutation(indices)
-        
-        start_idx = 0
-        for client_id in range(1, n_clients + 1):
-            n_assigned = n_samples_per_client[client_id - 1]
-            end_idx = start_idx + n_assigned
-            assigned_indices = shuffled_indices[start_idx:end_idx].tolist()
-            client_assignments[client_id].extend(assigned_indices)
-            start_idx = end_idx
-    
-    df_partitioned = df.copy()
-    df_partitioned[client_column] = 0
-    
-    for client_id, indices in client_assignments.items():
-        df_partitioned.loc[indices, client_column] = client_id
-    
-    return df_partitioned
 
-
-def get_label_distribution_stats(df: pd.DataFrame, label_column: str, client_column: str = "Client") -> Dict[int, Dict[int, int]]:
-    stats = {}
-    for client_id in sorted(df[client_column].unique()):
-        client_data = df[df[client_column] == client_id]
-        label_counts = client_data[label_column].value_counts().to_dict()
-        stats[int(client_id)] = label_counts
-    return stats
-
-def print_partition_statistics(df: pd.DataFrame, label_column: str, client_column: str = "Client",) -> None:
-    stats = get_label_distribution_stats(df, label_column, client_column)
-    
-    all_labels = sorted(set(label for client_stats in stats.values() for label in client_stats.keys()))
-    
-    print(f"Partition Statistics (Label: {label_column}")
-    print(f"{'Client':<10}", end="")
-    for label in all_labels:
-        print(f"{'Label=' + str(label):<15}", end="")
-    
-    for client_id in sorted(stats.keys()):
-        client_stats = stats[client_id]
-        total = sum(client_stats.values())
-        print(f"{client_id:<10}", end="")
-        for label in all_labels:
-            count = client_stats.get(label, 0)
-            pct = (count / total * 100) if total > 0 else 0.0
-            print(f"{count} ({pct:5.1f}%){'':<5}", end="")
-        print(f"{total:<10}")
-    
-    global_counts = df[label_column].value_counts().sort_index()
-    global_total = len(df)
-    print(f"{'Global':<10}", end="")
-    for label in all_labels:
-        count = global_counts.get(label, 0)
-        pct = (count / global_total * 100) if global_total > 0 else 0.0
-        print(f"{count} ({pct:5.1f}%){'':<5}", end="")
-    print(f"{global_total:<10}")
-    print()
-
-def compute_partition_heterogeneity_metrics(df: pd.DataFrame, label_column: str, client_column: str = "Client") -> Dict[str, float]:
-    stats = get_label_distribution_stats(df, label_column, client_column)
-    all_labels = sorted(set(label for client_stats in stats.values() for label in client_stats.keys()))
-    
-    client_entropies = []
-    client_diversities = []
-    label_counts_per_client = {label: [] for label in all_labels}
-    
-    for client_id in sorted(stats.keys()):
-        client_stats = stats[client_id]
-        total = sum(client_stats.values())
-        
-        if total == 0:
-            continue
-
-        probs = [client_stats.get(label, 0) / total for label in all_labels]
-        probs = [p for p in probs if p > 0]
-        entropy = -sum(p * np.log2(p) for p in probs)
-        client_entropies.append(entropy)
-        
-        diversity = sum(1 for label in all_labels if client_stats.get(label, 0) > 0)
-        client_diversities.append(diversity)
-        
-        for label in all_labels:
-            label_counts_per_client[label].append(client_stats.get(label, 0))
-    
-    global_counts = df[label_column].value_counts().sort_index()
-    global_total = len(df)
-    global_probs = [global_counts.get(label, 0) / global_total for label in all_labels]
-    global_probs = [p for p in global_probs if p > 0]
-    global_entropy = -sum(p * np.log2(p) for p in global_probs)
-    
-    imbalance_ratios = []
-    for label in all_labels:
-        counts = label_counts_per_client[label]
-        if len(counts) > 0 and max(counts) > 0:
-            ratio = max(counts) / max(min(counts), 1)
-            imbalance_ratios.append(ratio)
-    
-    avg_imbalance_ratio = np.mean(imbalance_ratios) if imbalance_ratios else 1.0
-    
-    return {
-        "label_entropy_per_client": float(np.mean(client_entropies)) if client_entropies else 0.0,
-        "label_entropy_global": float(global_entropy),
-        "client_label_diversity": float(np.mean(client_diversities)) if client_diversities else 0.0,
-        "label_imbalance_ratio": float(avg_imbalance_ratio),
-    }
-
-def partition_quantity(
+def partition_dirichlet_2d(
     df: pd.DataFrame,
     n_clients: int,
-    beta_qty: float,
+    beta_L: float,
+    beta_Q: float,
     label_column: str,
     client_column: str = "Client",
-    min_size: int = 1,
+    min_size: int = 10,
     seed: Optional[int] = None,
 ) -> pd.DataFrame:
-    rng = np.random.default_rng(seed)
+    """
+    Joint Dirichlet partitioning controlling both:
 
-    total_samples = len(df)
+        beta_L : label skew
+        beta_Q : quantity skew
 
-    # Træk target-størrelser fra Dirichlet
-    alpha = np.full(n_clients, beta_qty, dtype=float)
-    proportions = rng.dirichlet(alpha)
-    target_sizes = np.floor(proportions * total_samples).astype(int)
+    Algorithm
+    ----------
+    1. Sample client sizes via Dirichlet(beta_Q)
+    2. Allocate labels via Dirichlet(beta_L) under capacity constraints
 
-    # Sørg for minimumsstørrelse
-    target_sizes = np.maximum(target_sizes, min_size)
+    Returns
+    -------
+    df with reassigned client_column
+    """
 
-    # Justér så summen bliver præcis total_samples
-    while target_sizes.sum() < total_samples:
-        i = rng.integers(0, n_clients)
-        target_sizes[i] += 1
+    if seed is not None:
+        np.random.seed(seed)
 
-    while target_sizes.sum() > total_samples:
-        candidates = np.where(target_sizes > min_size)[0]
-        if len(candidates) == 0:
-            raise ValueError("Cannot adjust target_sizes without violating min_size.")
-        i = rng.choice(candidates)
-        target_sizes[i] -= 1
+    N = len(df)
 
-    # Fordel ALLE rækker på ny efter de nye target_sizes
-    shuffled_indices = rng.permutation(df.index.to_numpy())
+    if n_clients * min_size > N:
+        raise ValueError(
+            f"Dataset too small for min_size constraint "
+            f"(N={N}, n_clients={n_clients}, min_size={min_size})"
+        )
 
-    df_partitioned = df.copy()
-    df_partitioned[client_column] = 0
+    df = df.copy()
 
-    start = 0
-    for client_id in range(1, n_clients + 1):
-        size = int(target_sizes[client_id - 1])
-        end = start + size
-        assigned_indices = shuffled_indices[start:end]
-        df_partitioned.loc[assigned_indices, client_column] = client_id
-        start = end
+    # ------------------------------------------------------------
+    # STEP 1: Sample client sizes (quantity skew)
+    # ------------------------------------------------------------
 
-    return df_partitioned
+    proportions = np.random.dirichlet([beta_Q] * n_clients)
 
-def get_client_sizes(df: pd.DataFrame, client_column: str = "Client") -> Dict[int, int]:
-    sizes = {}
-    for client_id in sorted(df[client_column].unique()):
-        sizes[int(client_id)] = len(df[df[client_column] == client_id])
-    return sizes
+    remaining = N - n_clients * min_size
 
-def print_quantity_skew_statistics(df: pd.DataFrame, client_column: str = "Client") -> None:
-    sizes = get_client_sizes(df, client_column)
-    total_samples = len(df)
-    
-    print(f"Quantity Skew Statistics:")
-    print(f"{'Client':<10} {'Size':<15} {'Percentage':<15} {'Cumulative %':<15}")
-    print("-" * 55)
-    
-    sorted_clients = sorted(sizes.keys())
-    cumulative = 0
-    for client_id in sorted_clients:
-        size = sizes[client_id]
-        pct = (size / total_samples * 100) if total_samples > 0 else 0.0
-        cumulative += pct
-        print(f"{client_id:<10} {size:<15} {pct:>6.2f}%{'':<7} {cumulative:>6.2f}%{'':<7}")
-    
-    size_values = list(sizes.values())
-    min_size = min(size_values)
-    max_size = max(size_values)
-    mean_size = np.mean(size_values)
-    std_size = np.std(size_values)
-    cv = (std_size / mean_size) if mean_size > 0 else 0.0
-    imbalance_ratio = (max_size / min_size) if min_size > 0 else float('inf')
-    
-    print("-" * 55)
-    print(f"{'Total':<10} {total_samples:<15}")
-    print(f"\nSummary Statistics:")
-    print(f"Min size: {min_size}")
-    print(f"Max size: {max_size}")
-    print(f"Mean size: {mean_size:.1f}")
-    print(f"Std size: {std_size:.1f}")
-    print(f"Coefficient of Variation (CV): {cv:.4f}")
-    print(f"Imbalance Ratio (max/min): {imbalance_ratio:.2f}")
-    print()
+    extra_sizes = np.random.multinomial(remaining, proportions)
 
-def compute_quantity_skew_metrics(df: pd.DataFrame, client_column: str = "Client") -> Dict[str, float]:
-    sizes = get_client_sizes(df, client_column)
-    size_values = np.array(list(sizes.values()))
-    
-    total_samples = len(df)
-    mean_size = float(np.mean(size_values))
-    std_size = float(np.std(size_values))
-    min_size = int(np.min(size_values))
-    max_size = int(np.max(size_values))
-    
-    cv = (std_size / mean_size) if mean_size > 0 else 0.0
-    imbalance_ratio = (max_size / min_size) if min_size > 0 else float('inf')
-    
-    sorted_sizes = np.sort(size_values)
-    n = len(sorted_sizes)
-    cumsum = np.cumsum(sorted_sizes)
-    gini = (2 * np.sum((np.arange(1, n + 1)) * sorted_sizes)) / (n * cumsum[-1]) - (n + 1) / n if cumsum[-1] > 0 else 0.0
-    
+    client_sizes = extra_sizes + min_size
+
+    capacity = {i: int(size) for i, size in enumerate(client_sizes)}
+
+    # ------------------------------------------------------------
+    # STEP 2: Allocate samples label-by-label
+    # ------------------------------------------------------------
+
+    client_assignments: Dict[int, List[int]] = {i: [] for i in range(n_clients)}
+
+    labels = df[label_column].unique()
+
+    for label in labels:
+
+        indices = df.index[df[label_column] == label].to_numpy().copy()
+
+        np.random.shuffle(indices)
+
+        n_label = len(indices)
+
+        proportions = np.random.dirichlet([beta_L] * n_clients)
+
+        desired = np.random.multinomial(n_label, proportions)
+
+        start = 0
+
+        for client_id in range(n_clients):
+
+            available = capacity[client_id]
+
+            give = min(desired[client_id], available)
+
+            if give > 0:
+
+                assigned = indices[start:start + give]
+
+                client_assignments[client_id].extend(assigned)
+
+                capacity[client_id] -= give
+
+                start += give
+
+        # fallback allocation if capacity limits blocked some samples
+        remaining_indices = indices[start:]
+
+        for idx in remaining_indices:
+
+            available_clients = [c for c in range(n_clients) if capacity[c] > 0]
+
+            if not available_clients:
+                break
+
+            chosen = np.random.choice(available_clients)
+
+            client_assignments[chosen].append(idx)
+
+            capacity[chosen] -= 1
+
+    # ------------------------------------------------------------
+    # STEP 3: Write assignments to dataframe
+    # ------------------------------------------------------------
+
+    for client_id, indices in client_assignments.items():
+        df.loc[indices, client_column] = client_id + 1
+
+    return df
+
+def partition_dirichlet_label_quantity(
+    df,
+    n_clients,
+    beta_L,
+    beta_Q,
+    label_column,
+    client_column="Client",
+    min_size=10,
+    seed=None,
+):
+    """
+    Backwards-compatible wrapper for the new partition_dirichlet_2d function.
+
+    This keeps the existing pipeline intact while the new implementation
+    lives in partition_dirichlet_2d.
+    """
+    return partition_dirichlet_2d(
+        df=df,
+        n_clients=n_clients,
+        beta_L=beta_L,
+        beta_Q=beta_Q,
+        label_column=label_column,
+        client_column=client_column,
+        min_size=min_size,
+        seed=seed,
+    )
+import numpy as np
+import pandas as pd
+
+
+def print_partition_statistics(df, label_column, client_column="Client"):
+    print("\nPartition Statistics")
+    counts = df.groupby(client_column)[label_column].value_counts().unstack(fill_value=0)
+    print(counts)
+
+
+def compute_partition_heterogeneity_metrics(df, label_column, client_column="Client"):
+    label_dist = (
+        df.groupby(client_column)[label_column]
+        .value_counts(normalize=True)
+        .unstack(fill_value=0)
+    )
+
+    global_dist = df[label_column].value_counts(normalize=True)
+
+    kl_list = []
+
+    for _, row in label_dist.iterrows():
+        p = row.values + 1e-12
+        q = global_dist.reindex(label_dist.columns, fill_value=0).values + 1e-12
+        kl = np.sum(p * np.log(p / q))
+        kl_list.append(kl)
+
     return {
-        "min_size": min_size,
-        "max_size": max_size,
-        "mean_size": mean_size,
-        "std_size": std_size,
-        "coefficient_of_variation": cv,
-        "imbalance_ratio": imbalance_ratio,
-        "gini_coefficient": float(gini),
+        "mean_kl_divergence": float(np.mean(kl_list)),
+        "std_kl_divergence": float(np.std(kl_list)),
+    }
+
+
+def print_quantity_skew_statistics(df, client_column="Client"):
+    print("\nQuantity Skew Statistics")
+    counts = df[client_column].value_counts().sort_index()
+    print(counts)
+
+
+def compute_quantity_skew_metrics(df, client_column="Client"):
+    counts = df[client_column].value_counts().values
+
+    return {
+        "min_client_size": int(np.min(counts)),
+        "max_client_size": int(np.max(counts)),
+        "std_client_size": float(np.std(counts)),
     }

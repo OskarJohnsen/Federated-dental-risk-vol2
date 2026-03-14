@@ -24,8 +24,8 @@ from fdrp.ml.federated.train import main as run_federated
 # =========================
 # USER SETTINGS
 # =========================
-BETA_L = 0.5
-BETA_Q = 0.5
+BETA_L = 0.25
+BETA_Q = 1.5
 SEEDS = [42]
 
 MU_VALUES = [0.0, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
@@ -48,7 +48,7 @@ def generate_data_for_fixed_combo(
     beta_L: float,
     beta_Q: float,
     seed: int,
-) -> tuple[Path, Path]:
+) -> tuple[Path, Path, Dict[str, Any]]:
     print(f"\n[DATA] Generating dataset for beta_L={beta_L}, beta_Q={beta_Q}, seed={seed}")
 
     configs = load_all_configs(force_reload=True)
@@ -71,6 +71,7 @@ def generate_data_for_fixed_combo(
     qty_cfg["beta"] = float(beta_Q)
 
     df, global_thresholds = generate_dataset(configs)
+    partition_metadata = global_thresholds.get("_partition_metadata", {})
 
     cfg_out_dir = gen_cfg["output"]["output_dir"]
     combo = combo_name(beta_L, beta_Q, seed)
@@ -97,7 +98,13 @@ def generate_data_for_fixed_combo(
     df.to_csv(dataset_csv_path, index=False)
     print(f"[DATA] Saved synthetic dataset to: {dataset_csv_path}")
 
-    thresholds_path = proj_root / "configs" / "global_thresholds" / f"{DATASET}" / f"global_thresholds_{IID_TYPE}.json"
+    thresholds_path = (
+        proj_root
+        / "configs"
+        / "global_thresholds"
+        / f"{DATASET}"
+        / f"global_thresholds_{IID_TYPE}.json"
+    )
     ensure_dir(thresholds_path.parent)
     with thresholds_path.open("w") as f:
         json.dump(global_thresholds, f, indent=2)
@@ -107,7 +114,7 @@ def generate_data_for_fixed_combo(
         "data",
         "processed",
         f"{DATASET}",
-        f"global_test_set_{IID_TYPE}_{combo}.csv"
+        f"global_test_set_{IID_TYPE}_{combo}.csv",
     )
     ensure_dir(test_output_path.parent)
 
@@ -120,7 +127,7 @@ def generate_data_for_fixed_combo(
     )
     print(f"[DATA] Saved global test set to: {test_output_path}")
 
-    return dataset_csv_path, test_output_path
+    return dataset_csv_path, test_output_path, partition_metadata
 
 
 # ============================================================
@@ -154,7 +161,6 @@ def config_for_run(
     cfg.category_strategy = "both"
     cfg.threshold_method = "youden"
 
-    # annotering
     cfg.beta_L = float(beta_L)
     cfg.beta_Q = float(beta_Q)
 
@@ -192,7 +198,14 @@ def extract_summary_row(
         "fedprox_mu": fedprox_mu,
     }
 
-    for key in ["f1_global_macro", "f1_per_client_macro", "mse_macro", "ece_macro"]:
+    for key in [
+        "f1_global_macro",
+        "f1_per_client_macro",
+        "mse_macro",
+        "ece_macro",
+        "mae_macro",
+        "ece_prob_macro",
+    ]:
         if key in metrics:
             row[key] = metrics[key]
 
@@ -210,6 +223,41 @@ def extract_summary_row(
             row[f"MSE_{risk}"] = metrics[mse_key]
         if ece_key in metrics:
             row[f"ECE_{risk}"] = metrics[ece_key]
+
+    if "consistency_per_client/patient_disagreement_macro" in metrics:
+        row["disagreement_per_client_macro"] = metrics[
+            "consistency_per_client/patient_disagreement_macro"
+        ]
+    if "consistency_global/patient_disagreement_macro" in metrics:
+        row["disagreement_global_macro"] = metrics[
+            "consistency_global/patient_disagreement_macro"
+        ]
+
+    if "consistency_per_client/fleiss_kappa_macro" in metrics:
+        row["fleiss_kappa_per_client_macro"] = metrics[
+            "consistency_per_client/fleiss_kappa_macro"
+        ]
+    if "consistency_global/fleiss_kappa_macro" in metrics:
+        row["fleiss_kappa_global_macro"] = metrics[
+            "consistency_global/fleiss_kappa_macro"
+        ]
+
+    return row
+
+
+def add_partition_metadata(row: Dict[str, Any], partition_metadata: Dict[str, Any]) -> Dict[str, Any]:
+    row["partition_beta_L"] = partition_metadata.get("beta")
+    row["partition_beta_Q"] = partition_metadata.get("beta_qty")
+    row["partition_label"] = partition_metadata.get("label_column")
+    row["partition_min_size"] = partition_metadata.get("min_size")
+
+    het = partition_metadata.get("heterogeneity_metrics", {})
+    for k, v in het.items():
+        row[f"partition_{k}"] = v
+
+    qty = partition_metadata.get("quantity_skew_metrics", {})
+    for k, v in qty.items():
+        row[f"partition_{k}"] = v
 
     return row
 
@@ -318,22 +366,25 @@ def fedprox_mu_sweep(
     rows: List[Dict[str, Any]] = []
 
     for seed in seeds:
-        dataset_path, testset_path = generate_data_for_fixed_combo(beta_L, beta_Q, seed)
+        dataset_path, testset_path, partition_metadata = generate_data_for_fixed_combo(
+            beta_L, beta_Q, seed
+        )
 
         if RUN_CENTRALIZED:
-            row = run_single_non_federated("centralized", beta_L, beta_Q, seed, dataset_path, testset_path)
-            rows.append(row)
+            row = run_single_non_federated(
+                "centralized", beta_L, beta_Q, seed, dataset_path, testset_path
+            )
+            rows.append(add_partition_metadata(row, partition_metadata))
 
         if RUN_LOCAL:
-            row = run_single_non_federated("local", beta_L, beta_Q, seed, dataset_path, testset_path)
-            rows.append(row)
+            row = run_single_non_federated(
+                "local", beta_L, beta_Q, seed, dataset_path, testset_path
+            )
+            rows.append(add_partition_metadata(row, partition_metadata))
 
         if RUN_FEDERATED:
             for mu in mu_values:
-                if mu == 0.0:
-                    federated_method = "fedavg"
-                else:
-                    federated_method = "fedprox"
+                federated_method = "fedavg" if mu == 0.0 else "fedprox"
 
                 row = run_single_federated(
                     beta_L=beta_L,
@@ -344,7 +395,7 @@ def fedprox_mu_sweep(
                     federated_method=federated_method,
                     fedprox_mu=mu,
                 )
-                rows.append(row)
+                rows.append(add_partition_metadata(row, partition_metadata))
 
         df = pd.DataFrame(rows)
         summary_path.parent.mkdir(parents=True, exist_ok=True)

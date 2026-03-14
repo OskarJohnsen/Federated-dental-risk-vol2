@@ -6,8 +6,13 @@ from tqdm import tqdm
 from ..rules.decision.extraction import decide_row
 from ..rules.decision.removal import compute_removal_decision
 from ..rules.decision.risk import compute_risk_from_evidence
-from ..partitioning.niid_bench_partitioning import (partition_dirichlet_label, print_partition_statistics, compute_partition_heterogeneity_metrics, partition_quantity, print_quantity_skew_statistics, compute_quantity_skew_metrics)
-
+from ..partitioning.niid_bench_partitioning import (
+    partition_dirichlet_label_quantity,
+    print_partition_statistics,
+    compute_partition_heterogeneity_metrics,
+    print_quantity_skew_statistics,
+    compute_quantity_skew_metrics
+)
 def _get_profile(client_profiles: Dict[int, Any], client_id: int) -> Dict[str, Any]:
     return client_profiles.get(client_id, {"name": f"Clinic_{client_id}", "prevalence_shift": {}, "score_scale": {1: 1, 2: 1, 3: 1, 4: 1}, "missingness": {}})
 
@@ -241,43 +246,51 @@ def generate_dataset(configs: Dict[str, Any],beta: float | None = None, beta_qty
                     partition_beta = None
         
         if partition_beta is not None:
-            print(f"Applying Label Skew Partitioning")
-            print(f"Beta: {partition_beta}")
+            print("Applying Joint Label + Quantity Skew Partitioning")
+            print(f"Beta_L: {partition_beta}")
             print(f"Label: {partition_label_column}")
-            
+
+            quantity_config = partition_config.get("quantity_skew", {})
+            effective_beta_qty = beta_qty if beta_qty is not None else quantity_config.get("beta", 0.5)
+
+            print(f"Beta_Q: {effective_beta_qty}")
+
             partition_seed = gen["dataset"].get("random_seed", None)
-            
-            df = partition_dirichlet_label(df=df, n_clients=n_clients, beta=partition_beta, label_column=partition_label_column, client_column="Client", seed=partition_seed)
+            min_size = quantity_config.get("min_size", 10)
+
+            df = partition_dirichlet_label_quantity(
+                df=df,
+                n_clients=n_clients,
+                beta_L=partition_beta,
+                beta_Q=effective_beta_qty,
+                label_column=partition_label_column,
+                client_column="Client",
+                min_size=min_size,
+                seed=partition_seed,
+            )
+
             print_partition_statistics(df, partition_label_column, "Client")
             heterogeneity_metrics = compute_partition_heterogeneity_metrics(df, partition_label_column, "Client")
-            print(f"Partition Heterogeneity Metrics")
+            print("Partition Heterogeneity Metrics")
             for metric_name, value in heterogeneity_metrics.items():
                 print(f"{metric_name}: {value:.4f}")
-            
-            partition_metadata = {"beta": partition_beta, "label_column": partition_label_column, "iid_type": iid_type, "heterogeneity_metrics": heterogeneity_metrics}
-            
-            quantity_config = gen.get("partitioning", {}).get("quantity_skew", {})
-            config_beta_qty = quantity_config.get("beta", None)
-            effective_beta_qty = beta_qty if beta_qty is not None else config_beta_qty
-            
 
+            print_quantity_skew_statistics(df, "Client")
+            quantity_metrics = compute_quantity_skew_metrics(df, "Client")
+            print("Quantity Skew Metrics")
+            for metric_name, value in quantity_metrics.items():
+                print(f"{metric_name}: {value:.4f}")
 
-            if effective_beta_qty is not None:
-                print(f"\nApplying Quantity Skew")
-                print(f"Beta_qty: {effective_beta_qty}")
-                
-                min_size = quantity_config.get("min_size", 1)
-                df = partition_quantity(df=df, n_clients=n_clients, beta_qty=effective_beta_qty, label_column=partition_label_column, client_column="Client", min_size=min_size, seed=partition_seed)
-                
-                print_quantity_skew_statistics(df, "Client")
-                quantity_metrics = compute_quantity_skew_metrics(df, "Client")
-                print(f"Quantity Skew Metrics")
-                for metric_name, value in quantity_metrics.items():
-                    print(f"{metric_name}: {value:.4f}")
-                
-                partition_metadata["beta_qty"] = effective_beta_qty
-                partition_metadata["quantity_skew_metrics"] = quantity_metrics
-            
+            partition_metadata = {
+                "beta": partition_beta,
+                "beta_qty": effective_beta_qty,
+                "label_column": partition_label_column,
+                "iid_type": iid_type,
+                "heterogeneity_metrics": heterogeneity_metrics,
+                "quantity_skew_metrics": quantity_metrics,
+                "min_size": min_size,
+            }
+
             global_thresholds["_partition_metadata"] = partition_metadata
 
     return df, global_thresholds
