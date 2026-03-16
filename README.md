@@ -59,6 +59,7 @@ pip install -e .
 - **[TRAINING.md](docs/TRAINING.md)** - Machine learning pipeline and training paradigms
 - **[STATE_AND_NEXT_STEPS.md](docs/STATE_AND_NEXT_STEPS.md)** - Current project state, roadmap for current experiment
 - **[Technical Documentation (PDF)](docs/TECHNICAL_DOCUMENTATION.pdf)** – Detailed technical description of the implementation (Mejse Linderoth, Jonas Westergaard, Oskar Johnsen)
+- **[Results (PDF)](docs/Results.pdf)** – Experimental results and analysis of the federated learning experiments (Mejse Linderoth, Jonas Westergaard, Oskar Johnsen)
 
 ## Project Structure
 
