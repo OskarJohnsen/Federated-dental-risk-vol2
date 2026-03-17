@@ -24,8 +24,8 @@ from fdrp.ml.federated.train import main as run_federated
 # =========================
 # USER SETTINGS
 # =========================
-BETA_L = 0.25
-BETA_Q = 1.5
+BETA_L = 1.0
+BETA_Q = 5.0
 SEEDS = [42]
 
 MU_VALUES = [0.0, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
