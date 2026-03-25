@@ -14,7 +14,14 @@ from fdrp.ml.constants import DATASET, IID_TYPE, RISK_NAMES
 
 from fdrp.data_generation.config.loader import load_all_configs
 from fdrp.data_generation.generation.synth import generate_dataset
-from fdrp.data_generation.splits import create_global_test_set
+from fdrp.data_generation.splits import split_global_test_from_pool
+from fdrp.data_generation.partitioning.pool_partitioning import (
+    partition_dataset_constrained_dirichlet,
+    print_partition_statistics,
+    compute_partition_heterogeneity_metrics,
+    print_quantity_skew_statistics,
+    compute_quantity_skew_metrics,
+)
 
 from fdrp.ml.centralized.train import main as run_centralized
 from fdrp.ml.local.train import main as run_local
@@ -35,6 +42,10 @@ RUN_LOCAL = True
 RUN_FEDERATED = True
 
 SUMMARY_PATH = Path(r"C:\Users\Oskar\Desktop\fedprox_mu_sweep_summary.csv")
+
+TEST_SIZE = 3000
+MIN_SIZE = 100
+TEST_SEED = 999
 
 
 def combo_name(beta_L: float, beta_Q: float, seed: int) -> str:
@@ -58,20 +69,78 @@ def generate_data_for_fixed_combo(
     if "client_profiles" in gen_cfg:
         gen_cfg["client_profiles"]["seed"] = seed
 
-    if seed is not None:
-        np.random.seed(seed)
-        gen_cfg["dataset"]["random_seed"] = seed
-    else:
-        np.random.seed(gen_cfg["dataset"]["random_seed"])
+    np.random.seed(seed)
+    gen_cfg["dataset"]["random_seed"] = seed
 
-    part_cfg = gen_cfg.setdefault("partitioning", {})
-    part_cfg["beta"] = float(beta_L)
+    pool_cfg = gen_cfg.setdefault("pool_partitioning", {})
+    pool_multiplier = int(pool_cfg.get("pool_multiplier", 1))
+    pool_cfg["pool_multiplier"] = pool_multiplier
+    pool_cfg["test_size"] = int(TEST_SIZE)
+    pool_cfg["label_column"] = "Risk_Category_Composite"
+    pool_cfg["beta_L"] = float(beta_L)
+    pool_cfg["beta_Q"] = float(beta_Q)
+    pool_cfg["min_size"] = int(MIN_SIZE)
 
-    qty_cfg = part_cfg.setdefault("quantity_skew", {})
-    qty_cfg["beta"] = float(beta_Q)
+    # 1) generate full dataset
+    df_pool, global_thresholds = generate_dataset(configs)
 
-    df, global_thresholds = generate_dataset(configs)
-    partition_metadata = global_thresholds.get("_partition_metadata", {})
+    # 2) split off global test set
+    df_remaining_pool, df_test = split_global_test_from_pool(
+        df=df_pool,
+        n_test_samples=TEST_SIZE,
+        seed=TEST_SEED,
+    )
+
+    # 3) partition remaining data directly
+    n_clients = gen_cfg["dataset"]["n_clients"]
+
+    df_train = partition_dataset_constrained_dirichlet(
+        df=df_remaining_pool,
+        n_clients=n_clients,
+        beta_L=beta_L,
+        beta_Q=beta_Q,
+        label_column="Risk_Category_Composite",
+        client_column="Client",
+        min_size=MIN_SIZE,
+        seed=seed,
+    )
+
+    # partition metadata
+    print_partition_statistics(df_train, "Risk_Category_Composite", "Client")
+
+    heterogeneity_metrics = compute_partition_heterogeneity_metrics(
+        df_train, "Risk_Category_Composite", "Client"
+    )
+
+    print("\nPartition Heterogeneity Metrics")
+    for metric_name, value in heterogeneity_metrics.items():
+        print(f"{metric_name}: {value:.4f}")
+
+    print_quantity_skew_statistics(df_train, "Client")
+
+    quantity_metrics = compute_quantity_skew_metrics(df_train, "Client")
+
+    print("\nQuantity Skew Metrics")
+    for metric_name, value in quantity_metrics.items():
+        print(f"{metric_name}: {value:.4f}")
+
+    partition_metadata = {
+        "beta_L": beta_L,
+        "beta_Q": beta_Q,
+        "label_column": "Risk_Category_Composite",
+        "iid_type": IID_TYPE,
+        "partition_method": "constrained_dirichlet",
+        "heterogeneity_metrics": heterogeneity_metrics,
+        "quantity_skew_metrics": quantity_metrics,
+        "final_train_size": int(len(df_train)),
+        "test_size": TEST_SIZE,
+        "pool_rows": int(len(df_pool)),
+        "remaining_rows_after_test_split": int(len(df_remaining_pool)),
+        "min_size": MIN_SIZE,
+        "pool_multiplier": pool_multiplier,
+    }
+
+    global_thresholds["_partition_metadata"] = partition_metadata
 
     cfg_out_dir = gen_cfg["output"]["output_dir"]
     combo = combo_name(beta_L, beta_Q, seed)
@@ -95,17 +164,18 @@ def generate_data_for_fixed_combo(
     ensure_dir(out_dir)
 
     dataset_csv_path = out_dir.joinpath(f"{base}.csv")
-    df.to_csv(dataset_csv_path, index=False)
-    print(f"[DATA] Saved synthetic dataset to: {dataset_csv_path}")
+    df_train.to_csv(dataset_csv_path, index=False)
+    print(f"[DATA] Saved train dataset to: {dataset_csv_path}")
 
     thresholds_path = (
         proj_root
         / "configs"
         / "global_thresholds"
         / f"{DATASET}"
-        / f"global_thresholds_{IID_TYPE}.json"
+        / f"global_thresholds_{IID_TYPE}_{combo}.json"
     )
     ensure_dir(thresholds_path.parent)
+
     with thresholds_path.open("w") as f:
         json.dump(global_thresholds, f, indent=2)
     print(f"[DATA] Saved global thresholds to: {thresholds_path}")
@@ -118,13 +188,7 @@ def generate_data_for_fixed_combo(
     )
     ensure_dir(test_output_path.parent)
 
-    create_global_test_set(
-        dataset_path=dataset_csv_path,
-        output_path=test_output_path,
-        n_samples=3000,
-        seed=999,
-        backup_original=True,
-    )
+    df_test.to_csv(test_output_path, index=False)
     print(f"[DATA] Saved global test set to: {test_output_path}")
 
     return dataset_csv_path, test_output_path, partition_metadata
@@ -157,9 +221,11 @@ def config_for_run(
     cfg.dataset_path = str(dataset_path)
     cfg.test_set_path = str(testset_path)
     cfg.model_seed = seed
+    cfg.data_split_seed = seed
 
     cfg.category_strategy = "both"
     cfg.threshold_method = "youden"
+    cfg.use_wandb = False
 
     cfg.beta_L = float(beta_L)
     cfg.beta_Q = float(beta_Q)
@@ -246,10 +312,17 @@ def extract_summary_row(
 
 
 def add_partition_metadata(row: Dict[str, Any], partition_metadata: Dict[str, Any]) -> Dict[str, Any]:
-    row["partition_beta_L"] = partition_metadata.get("beta")
-    row["partition_beta_Q"] = partition_metadata.get("beta_qty")
+    row["partition_beta_L"] = partition_metadata.get("beta_L")
+    row["partition_beta_Q"] = partition_metadata.get("beta_Q")
     row["partition_label"] = partition_metadata.get("label_column")
     row["partition_min_size"] = partition_metadata.get("min_size")
+    row["partition_method"] = partition_metadata.get("partition_method")
+    row["partition_final_train_size"] = partition_metadata.get("final_train_size")
+    row["partition_test_size"] = partition_metadata.get("test_size")
+    row["partition_pool_rows"] = partition_metadata.get("pool_rows")
+    row["partition_remaining_rows_after_test_split"] = partition_metadata.get(
+        "remaining_rows_after_test_split"
+    )
 
     het = partition_metadata.get("heterogeneity_metrics", {})
     for k, v in het.items():
@@ -296,7 +369,11 @@ def run_single_non_federated(
     else:
         raise ValueError(f"Unsupported non-federated paradigm: {paradigm}")
 
-    metrics = result["summary_metrics"] if isinstance(result, dict) and "summary_metrics" in result else (result or {})
+    metrics = (
+        result["summary_metrics"]
+        if isinstance(result, dict) and "summary_metrics" in result
+        else (result or {})
+    )
 
     return extract_summary_row(
         paradigm=paradigm,
@@ -340,7 +417,11 @@ def run_single_federated(
     all_seeds(cfg.model_seed)
 
     result = run_federated(cfg)
-    metrics = result["summary_metrics"] if isinstance(result, dict) and "summary_metrics" in result else (result or {})
+    metrics = (
+        result["summary_metrics"]
+        if isinstance(result, dict) and "summary_metrics" in result
+        else (result or {})
+    )
 
     return extract_summary_row(
         paradigm="federated",

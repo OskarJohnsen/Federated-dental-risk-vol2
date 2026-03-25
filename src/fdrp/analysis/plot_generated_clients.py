@@ -12,17 +12,27 @@ from fdrp.ml.constants import DATASET, IID_TYPE
 
 from fdrp.data_generation.config.loader import load_all_configs
 from fdrp.data_generation.generation.synth import generate_dataset
-from fdrp.data_generation.splits import create_global_test_set
+from fdrp.data_generation.splits import split_global_test_from_pool
+from fdrp.data_generation.partitioning.pool_partitioning import (
+    partition_dataset_constrained_dirichlet,
+    print_partition_statistics,
+    compute_partition_heterogeneity_metrics,
+    print_quantity_skew_statistics,
+    compute_quantity_skew_metrics,
+)
 
 
 # ============================================================
 # USER SETTINGS
 # ============================================================
-BETA_L = 100.0
-BETA_Q = 5.0
-SEED = 50
+BETA_L = 100
+BETA_Q = 0.25
+SEED = 42
 
-PLOT_FULL_DATASET = True
+TEST_SIZE = 3000
+MIN_SIZE = 100
+
+PLOT_FULL_DATASET = True   # True = plot train dataset, False = plot global test set
 SAVE_PLOT = False
 
 
@@ -47,15 +57,74 @@ def generate_data_for_beta_combo(
     np.random.seed(seed)
     gen_cfg["dataset"]["random_seed"] = seed
 
-    part_cfg = gen_cfg.setdefault("partitioning", {})
-    part_cfg["beta"] = float(beta_L)
+    pool_cfg = gen_cfg.setdefault("pool_partitioning", {})
+    pool_multiplier = int(pool_cfg.get("pool_multiplier", 1))
+    pool_cfg["pool_multiplier"] = pool_multiplier
+    pool_cfg["test_size"] = int(TEST_SIZE)
+    pool_cfg["label_column"] = "Risk_Category_Composite"
+    pool_cfg["beta_L"] = float(beta_L)
+    pool_cfg["beta_Q"] = float(beta_Q)
+    pool_cfg["min_size"] = int(MIN_SIZE)
 
-    qty_cfg = part_cfg.setdefault("quantity_skew", {})
-    qty_cfg["beta"] = float(beta_Q)
+    # 1) generate full dataset
+    df_pool, global_thresholds = generate_dataset(configs)
 
-    df, global_thresholds = generate_dataset(configs)
-    partition_metadata = global_thresholds.get("_partition_metadata", {})
+    # 2) split off global test set
+    df_remaining_pool, df_test = split_global_test_from_pool(
+        df=df_pool,
+        n_test_samples=TEST_SIZE,
+        seed=999,
+    )
 
+    # 3) partition the remaining dataset directly
+    n_clients = gen_cfg["dataset"]["n_clients"]
+
+    df_train = partition_dataset_constrained_dirichlet(
+        df=df_remaining_pool,
+        n_clients=n_clients,
+        beta_L=beta_L,
+        beta_Q=beta_Q,
+        label_column="Risk_Category_Composite",
+        client_column="Client",
+        min_size=MIN_SIZE,
+        seed=seed,
+    )
+
+    # partition metadata
+    print_partition_statistics(df_train, "Risk_Category_Composite", "Client")
+    heterogeneity_metrics = compute_partition_heterogeneity_metrics(
+        df_train, "Risk_Category_Composite", "Client"
+    )
+
+    print("\nPartition Heterogeneity Metrics")
+    for metric_name, value in heterogeneity_metrics.items():
+        print(f"{metric_name}: {value:.4f}")
+
+    print_quantity_skew_statistics(df_train, "Client")
+    quantity_metrics = compute_quantity_skew_metrics(df_train, "Client")
+
+    print("\nQuantity Skew Metrics")
+    for metric_name, value in quantity_metrics.items():
+        print(f"{metric_name}: {value:.4f}")
+
+    partition_metadata = {
+        "beta_L": beta_L,
+        "beta_Q": beta_Q,
+        "label_column": "Risk_Category_Composite",
+        "iid_type": IID_TYPE,
+        "partition_method": "constrained_dirichlet",
+        "heterogeneity_metrics": heterogeneity_metrics,
+        "quantity_skew_metrics": quantity_metrics,
+        "final_train_size": int(len(df_train)),
+        "test_size": TEST_SIZE,
+        "pool_rows": int(len(df_pool)),
+        "remaining_rows_after_test_split": int(len(df_remaining_pool)),
+        "pool_multiplier": pool_multiplier,
+    }
+
+    global_thresholds["_partition_metadata"] = partition_metadata
+
+    # save outputs
     cfg_out_dir = gen_cfg["output"]["output_dir"]
     combo = f"betaL_{beta_L}_betaQ_{beta_Q}_seed_{seed}"
     base = f"synthetic_dataset_{DATASET}_{IID_TYPE}_{combo}"
@@ -78,20 +147,22 @@ def generate_data_for_beta_combo(
     ensure_dir(out_dir)
 
     dataset_csv_path = out_dir.joinpath(f"{base}.csv")
-    df.to_csv(dataset_csv_path, index=False)
-    print(f"[DATA] Saved synthetic dataset to: {dataset_csv_path}")
+    df_train.to_csv(dataset_csv_path, index=False)
+    print(f"[DATA] Saved train dataset to: {dataset_csv_path}")
 
     thresholds_path = (
         proj_root
         / "configs"
         / "global_thresholds"
         / f"{DATASET}"
-        / f"global_thresholds_{IID_TYPE}.json"
+        / f"global_thresholds_{IID_TYPE}_{combo}.json"
     )
     ensure_dir(thresholds_path.parent)
 
     with thresholds_path.open("w") as f:
         json.dump(global_thresholds, f, indent=2)
+
+    print(f"[DATA] Saved thresholds to: {thresholds_path}")
 
     test_output_path = (
         proj_root
@@ -102,14 +173,7 @@ def generate_data_for_beta_combo(
     )
     ensure_dir(test_output_path.parent)
 
-    create_global_test_set(
-        dataset_path=dataset_csv_path,
-        output_path=test_output_path,
-        n_samples=3000,
-        seed=999,
-        backup_original=True,
-    )
-
+    df_test.to_csv(test_output_path, index=False)
     print(f"[DATA] Saved global test set to: {test_output_path}")
 
     return dataset_csv_path, test_output_path, partition_metadata
@@ -124,6 +188,11 @@ def plot_patients_per_client_with_marked_complications(
     title: str = "Patients per Client with Marked Complications",
     save_path: str | Path | None = None,
 ) -> None:
+    """
+    Plot per client:
+    - number with at least one complication
+    - number with no complications
+    """
     df = df.copy()
 
     if client_col not in df.columns:
@@ -140,9 +209,7 @@ def plot_patients_per_client_with_marked_complications(
     if missing:
         raise ValueError(f"Missing complication columns: {missing}")
 
-    df["AtLeastOneComplication"] = (
-        df[complication_cols].max(axis=1) > 0
-    ).astype(int)
+    df["AtLeastOneComplication"] = (df[complication_cols].max(axis=1) > 0).astype(int)
 
     summary = (
         df.groupby(client_col)["AtLeastOneComplication"]
@@ -151,9 +218,7 @@ def plot_patients_per_client_with_marked_complications(
     )
 
     summary["without_complication"] = summary["total"] - summary["with_complication"]
-    summary["pct_with_complication"] = (
-        100 * summary["with_complication"] / summary["total"]
-    )
+    summary["pct_with_complication"] = 100 * summary["with_complication"] / summary["total"]
 
     try:
         summary = summary.sort_values(client_col, key=lambda s: pd.to_numeric(s))
@@ -167,7 +232,6 @@ def plot_patients_per_client_with_marked_complications(
     ax.bar(
         x,
         summary["with_complication"],
-        color="orange",
         label="At least one complication",
     )
 
@@ -175,7 +239,6 @@ def plot_patients_per_client_with_marked_complications(
         x,
         summary["without_complication"],
         bottom=summary["with_complication"],
-        color="blue",
         label="No complication",
     )
 
@@ -206,6 +269,96 @@ def plot_patients_per_client_with_marked_complications(
     plt.show()
 
 
+def plot_four_complications_per_client(
+    df: pd.DataFrame,
+    client_col: str = "Client",
+    save_path: str | Path | None = None,
+    overall_title: str = "Complications per Client",
+) -> None:
+    """
+    Create one figure with 4 small plots, one for each complication.
+    Each subplot shows:
+    - number with complication
+    - number without complication
+    - annotation with count and percentage with complication
+    """
+    df = df.copy()
+
+    if client_col not in df.columns:
+        raise ValueError(f"Column '{client_col}' not found in dataframe.")
+
+    complication_info = [
+        ("Risk_AlveolarOsteitis", "Alveolar Osteitis"),
+        ("Risk_SecondaryInfection", "Secondary Infection"),
+        ("Risk_NerveDysesthesia", "Nerve Dysesthesia"),
+        ("Risk_Bleeding", "Bleeding"),
+    ]
+
+    missing = [col for col, _ in complication_info if col not in df.columns]
+    if missing:
+        raise ValueError(f"Missing complication columns: {missing}")
+
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10), sharey=True)
+    axes = axes.flatten()
+
+    for ax, (col, pretty_name) in zip(axes, complication_info):
+        summary = (
+            df.groupby(client_col)[col]
+            .agg(with_complication="sum", total="count")
+            .reset_index()
+        )
+
+        summary["without_complication"] = summary["total"] - summary["with_complication"]
+        summary["pct_with_complication"] = 100 * summary["with_complication"] / summary["total"]
+
+        try:
+            summary = summary.sort_values(client_col, key=lambda s: pd.to_numeric(s))
+        except Exception:
+            summary = summary.sort_values(client_col)
+
+        x = np.arange(len(summary))
+
+        ax.bar(
+            x,
+            summary["with_complication"],
+            label="Complication",
+        )
+        ax.bar(
+            x,
+            summary["without_complication"],
+            bottom=summary["with_complication"],
+            label="No complication",
+        )
+
+        y_offset = summary["total"].max() * 0.01
+
+        for i, row in enumerate(summary.itertuples(index=False)):
+            ax.text(
+                i,
+                row.total + y_offset,
+                f"{int(row.with_complication)} ({row.pct_with_complication:.1f}%)",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+            )
+
+        ax.set_xticks(x)
+        ax.set_xticklabels(summary[client_col])
+        ax.set_xlabel("Client ID")
+        ax.set_ylabel("Number of Patients")
+        ax.set_title(pretty_name)
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper right")
+    fig.suptitle(overall_title, fontsize=14)
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+
+    if save_path is not None:
+        plt.savefig(save_path, dpi=300, bbox_inches="tight")
+        print(f"[PLOT] Saved figure to: {save_path}")
+
+    plt.show()
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -222,28 +375,48 @@ def main() -> None:
     print(f"[INFO] Plotting data from: {chosen_path}")
     print(f"[INFO] Partition metadata: {partition_metadata}")
 
-    save_path = None
+    atleast_one_save_path = None
+    four_complications_save_path = None
+
     if SAVE_PLOT:
         proj_root = root_path()
         plot_dir = proj_root / "src" / "fdrp" / "analysis" / "plots"
         ensure_dir(plot_dir)
 
-        data_tag = "full_dataset" if PLOT_FULL_DATASET else "global_test_set"
-        save_path = plot_dir / (
-            f"patients_per_client_{data_tag}_betaL_{BETA_L}_betaQ_{BETA_Q}_seed_{SEED}.png"
+        data_tag = "train_dataset" if PLOT_FULL_DATASET else "global_test_set"
+
+        atleast_one_save_path = plot_dir / (
+            f"patients_per_client_atleast_one_{data_tag}_betaL_{BETA_L}_betaQ_{BETA_Q}_seed_{SEED}.png"
         )
 
-    data_name = "Full generated dataset" if PLOT_FULL_DATASET else "Global test set"
-    title = (
+        four_complications_save_path = plot_dir / (
+            f"patients_per_client_four_complications_{data_tag}_betaL_{BETA_L}_betaQ_{BETA_Q}_seed_{SEED}.png"
+        )
+
+    data_name = "Train dataset" if PLOT_FULL_DATASET else "Global test set"
+
+    title_atleast_one = (
         f"Patients per Client with Marked Complications\n"
+        f"({data_name}, beta_L={BETA_L}, beta_Q={BETA_Q}, seed={SEED})"
+    )
+
+    title_four = (
+        f"Complications per Client\n"
         f"({data_name}, beta_L={BETA_L}, beta_Q={BETA_Q}, seed={SEED})"
     )
 
     plot_patients_per_client_with_marked_complications(
         df=df,
         client_col="Client",
-        title=title,
-        save_path=save_path,
+        title=title_atleast_one,
+        save_path=atleast_one_save_path,
+    )
+
+    plot_four_complications_per_client(
+        df=df,
+        client_col="Client",
+        save_path=four_complications_save_path,
+        overall_title=title_four,
     )
 
 

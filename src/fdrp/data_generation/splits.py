@@ -118,3 +118,36 @@ def create_global_test_set(dataset_path: Path, output_path: Path, n_samples: int
     print(f"Updated original dataset: removed {len(df_test):,} test samples")
     
     return output_path
+
+def split_global_test_from_pool(
+    df: pd.DataFrame,
+    n_test_samples: int = 3000,
+    seed: int = 999,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Split a large in-memory dataframe into:
+    - remaining pool
+    - global test set
+    """
+    if n_test_samples > len(df):
+        raise ValueError(
+            f"Requested {n_test_samples} test samples, but dataframe only has {len(df)} rows"
+        )
+
+    rng = np.random.default_rng(seed)
+    indices = np.arange(len(df))
+    test_indices = rng.choice(indices, size=n_test_samples, replace=False)
+
+    test_mask = np.zeros(len(df), dtype=bool)
+    test_mask[test_indices] = True
+
+    df_test = df.loc[test_mask].copy().reset_index(drop=True)
+    df_remaining = df.loc[~test_mask].copy().reset_index(drop=True)
+
+    print("Created global test split from in-memory pool")
+    print(f"Full pool: {len(df):,} samples")
+    print(f"Test set: {len(df_test):,} samples")
+    print(f"Remaining pool: {len(df_remaining):,} samples")
+
+    return df_remaining, df_test
+

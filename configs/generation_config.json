@@ -28,15 +28,6 @@
     "description": "Softmax temperature controls decision randomness. noise_sd adds Gaussian noise to scores before softmax."
   },
   
-  "partitioning": {
-    "beta": 0.5,
-    "label_column": "Risk_Category_Composite",
-    "quantity_skew": {
-      "beta": 0.7,
-      "min_size": 100
-    }
-  },
-  
   "output": {
     "formats": ["csv", "xlsx"],
     "output_dir": "../../data/raw/",
@@ -76,6 +67,18 @@
     "n_features": 26,
     "n_targets": 4,
     "total_columns": 44
+  },
+
+  "pool_partitioning": {
+    "enabled": true,
+    "pool_multiplier": 1,
+    "test_size": 3000,
+    "label_column": "Risk_Category_Composite",
+    "beta_L": 0.5,
+    "beta_Q": 0.7,
+    "min_size": 100
   }
 }
+
+  
 

@@ -6,13 +6,7 @@ from tqdm import tqdm
 from ..rules.decision.extraction import decide_row
 from ..rules.decision.removal import compute_removal_decision
 from ..rules.decision.risk import compute_risk_from_evidence
-from ..partitioning.niid_bench_partitioning import (
-    partition_dirichlet_label_quantity,
-    print_partition_statistics,
-    compute_partition_heterogeneity_metrics,
-    print_quantity_skew_statistics,
-    compute_quantity_skew_metrics
-)
+
 def _get_profile(client_profiles: Dict[int, Any], client_id: int) -> Dict[str, Any]:
     return client_profiles.get(client_id, {"name": f"Clinic_{client_id}", "prevalence_shift": {}, "score_scale": {1: 1, 2: 1, 3: 1, 4: 1}, "missingness": {}})
 
@@ -43,7 +37,7 @@ def prob_bisphosphonates_given_age_osteoporosis(age: int, has_osteoporosis: bool
             else:
                 return 0.003
 
-def generate_dataset(configs: Dict[str, Any],beta: float | None = None, beta_qty: float | None = None) -> Tuple[pd.DataFrame, Dict[str, Dict[str, float]]]:
+def generate_dataset(configs: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, Dict[str, float]]]:
     gen = configs["generation"]
     extraction_cfg = configs["extraction_types"]
     binary_cfg = configs["extraction_binary"]
@@ -58,17 +52,22 @@ def generate_dataset(configs: Dict[str, Any],beta: float | None = None, beta_qty
             p["score_scale"] = {int(k): v for k, v in p["score_scale"].items()}
         client_profiles[int(cid)] = p
 
-    n_clients = gen["dataset"]["n_clients"]
-    patients_per_client = gen["dataset"]["patients_per_client"]
+    n_source_clients = gen["dataset"]["n_clients"]
+    patients_per_source_client = gen["dataset"]["patients_per_client"]
+
+    pool_cfg = gen.get("pool_partitioning", {})
+    pool_multiplier = pool_cfg.get("pool_multiplier", 1)
+
+    patients_per_source_client = int(patients_per_source_client * pool_multiplier)
 
     IID_AGE_MU = 28
     IID_PROXIMITY_P = 0.60
     IID_DEPTH_PROBS = [0.45, 0.45, 0.1]
 
     rows = []
-    for c in range(1, n_clients + 1):
+    for c in range(1, n_source_clients + 1):
         prof = _get_profile(client_profiles, c)
-        n = patients_per_client
+        n = patients_per_source_client
 
         age = _generate_age(n, mu=IID_AGE_MU)
         sex = _generate_binary(n, 0.5)
@@ -111,7 +110,7 @@ def generate_dataset(configs: Dict[str, Any],beta: float | None = None, beta_qty
 
         for i in range(n):
             rows.append({
-                "Client": c, "Patient": i + 1,
+                "Source_Client": c, "Patient": i + 1,
                 "Age": age[i], "Sex": sex[i],
                 "Pain": pain[i], "Swelling": swelling[i], "Trismus": trismus[i], "Pericoronitis": pericoronitis[i],
                 "Caries_Wisdom": caries_w[i], "Caries_Adjacent": caries_adj[i],
@@ -224,73 +223,5 @@ def generate_dataset(configs: Dict[str, Any],beta: float | None = None, beta_qty
     print(f"Low (all risks low): {n_low_comp} ({n_low_comp/len(composite_cats)*100:.1f}%)")
     print(f"Medium (max is medium, none high): {n_med_comp} ({n_med_comp/len(composite_cats)*100:.1f}%)")
     print(f"High (at least one risk high): {n_high_comp} ({n_high_comp/len(composite_cats)*100:.1f}%)")
-
-    partition_beta = None
-    if iid_type == "non-iid":
-        partition_config = gen.get("partitioning", {})
-        config_beta = partition_config.get("beta", 0.5)
-        partition_beta = beta if beta is not None else config_beta
-        partition_label_column = partition_config.get("label_column", "Risk_Category_Composite")
-        
-        if partition_label_column not in df.columns:
-            if "Risk_Category_Composite" in df.columns:
-                partition_label_column = "Risk_Category_Composite"
-                print(f"Warning: partition label column not found. used composite label: {partition_label_column}")
-            else:
-                available_labels = [col for col in df.columns if col.startswith("Risk_Category_")]
-                if available_labels:
-                    partition_label_column = available_labels[0]
-                    print(f"Warning: Composite label not found. used: {partition_label_column}")
-                else:
-                    print("Warning: No risk category columns.")
-                    partition_beta = None
-        
-        if partition_beta is not None:
-            print("Applying Joint Label + Quantity Skew Partitioning")
-            print(f"Beta_L: {partition_beta}")
-            print(f"Label: {partition_label_column}")
-
-            quantity_config = partition_config.get("quantity_skew", {})
-            effective_beta_qty = beta_qty if beta_qty is not None else quantity_config.get("beta", 0.5)
-
-            print(f"Beta_Q: {effective_beta_qty}")
-
-            partition_seed = gen["dataset"].get("random_seed", None)
-            min_size = quantity_config.get("min_size", 10)
-
-            df = partition_dirichlet_label_quantity(
-                df=df,
-                n_clients=n_clients,
-                beta_L=partition_beta,
-                beta_Q=effective_beta_qty,
-                label_column=partition_label_column,
-                client_column="Client",
-                min_size=min_size,
-                seed=partition_seed,
-            )
-
-            print_partition_statistics(df, partition_label_column, "Client")
-            heterogeneity_metrics = compute_partition_heterogeneity_metrics(df, partition_label_column, "Client")
-            print("Partition Heterogeneity Metrics")
-            for metric_name, value in heterogeneity_metrics.items():
-                print(f"{metric_name}: {value:.4f}")
-
-            print_quantity_skew_statistics(df, "Client")
-            quantity_metrics = compute_quantity_skew_metrics(df, "Client")
-            print("Quantity Skew Metrics")
-            for metric_name, value in quantity_metrics.items():
-                print(f"{metric_name}: {value:.4f}")
-
-            partition_metadata = {
-                "beta": partition_beta,
-                "beta_qty": effective_beta_qty,
-                "label_column": partition_label_column,
-                "iid_type": iid_type,
-                "heterogeneity_metrics": heterogeneity_metrics,
-                "quantity_skew_metrics": quantity_metrics,
-                "min_size": min_size,
-            }
-
-            global_thresholds["_partition_metadata"] = partition_metadata
 
     return df, global_thresholds
