@@ -32,7 +32,7 @@ from fdrp.ml.federated.train import main as run_federated
 
 
 # Grid
-BETA_L_VALUES = [0.1, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0,50.0]
+BETA_L_VALUES = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0,50.0]
 BETA_Q_VALUES = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 50.0]
 PARADIGMS = ["centralized", "local", "federated"]
 

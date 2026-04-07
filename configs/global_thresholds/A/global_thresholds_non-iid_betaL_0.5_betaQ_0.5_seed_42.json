@@ -16,19 +16,19 @@
     "medium_high": 0.007
   },
   "_partition_metadata": {
-    "beta_L": 0.25,
-    "beta_Q": 0.25,
+    "beta_L": 0.5,
+    "beta_Q": 0.5,
     "label_column": "Risk_Category_Composite",
     "iid_type": "non-iid",
     "partition_method": "constrained_dirichlet",
     "heterogeneity_metrics": {
-      "mean_kl_divergence": 0.636296067930578,
-      "std_kl_divergence": 0.29004758179767154
+      "mean_kl_divergence": 0.7778631809155032,
+      "std_kl_divergence": 0.5927750039804034
     },
     "quantity_skew_metrics": {
-      "min_client_size": 102,
-      "max_client_size": 13453,
-      "std_client_size": 4610.737576570586
+      "min_client_size": 168,
+      "max_client_size": 10820,
+      "std_client_size": 3486.2740569266784
     },
     "final_train_size": 47000,
     "test_size": 3000,

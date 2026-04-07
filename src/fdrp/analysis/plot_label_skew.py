@@ -147,7 +147,7 @@ def plot_label_skew_in_two_figures(
         plt.show()
 
 
-Oskar_path = r"C:\Users\oskar\OneDrive\Desktop\4 Semester\Dataproject\Federated-dental-risk-vol2\federated-dental-risk-prediction\src\fdrp\analysis\Data\sweep_beta_summary_1.csv"
+Oskar_path = r"C:\Users\Oskar\Desktop\Dataproject\federated-dental-risk-vol2\src\fdrp\analysis\Data\sweep_beta_summary_2.csv"
 
 
 BETA_L_VALUES = [0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 10.0]
