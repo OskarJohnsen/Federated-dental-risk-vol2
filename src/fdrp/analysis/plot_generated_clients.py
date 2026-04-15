@@ -25,8 +25,8 @@ from fdrp.data_generation.partitioning.pool_partitioning import (
 # ============================================================
 # USER SETTINGS
 # ============================================================
-BETA_L = 100
-BETA_Q = 0.25
+BETA_L = 1.0
+BETA_Q = 100
 SEED = 42
 
 TEST_SIZE = 3000
