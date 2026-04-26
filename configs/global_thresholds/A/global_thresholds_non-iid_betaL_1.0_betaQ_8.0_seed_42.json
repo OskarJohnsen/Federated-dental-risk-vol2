@@ -34,6 +34,7 @@
     "test_size": 3000,
     "pool_rows": 50000,
     "remaining_rows_after_test_split": 47000,
+    "min_size": 100,
     "pool_multiplier": 1
   }
 }
