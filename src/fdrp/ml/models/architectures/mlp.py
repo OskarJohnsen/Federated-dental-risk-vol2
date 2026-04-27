@@ -203,7 +203,7 @@ class MLP(BaseModel):
     def __init__(
         self,
         input_size: int,
-        hidden_size: List[int] = [64, 32],
+        hidden_size: List[int] = [64,64,64],
         dropout: float = 0.2,
         n_clf_classes: Optional[int] = None,
     ):
