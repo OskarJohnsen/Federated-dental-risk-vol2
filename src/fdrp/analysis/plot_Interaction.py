@@ -119,7 +119,7 @@ def plot_interaction_heatmaps(
 
 BETA_L_VALUES = [0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 10.0]
 BETA_Q_VALUES = [0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 10.0]
-Oskar_path = r"C:\Users\oskar\OneDrive\Desktop\4 Semester\Dataproject\Federated-dental-risk-vol2\federated-dental-risk-prediction\src\fdrp\analysis\Data\sweep_beta_summary_1.csv"
+Oskar_path = r"C:\Users\mejse\Documents\uni\4. semester\Dataprojekt\projekt\Federated-dental-risk-vol2\src\fdrp\analysis\Data\sweep_beta_summary_2.csv"
 plot_interaction_heatmaps(
     csv_path=Oskar_path,
     metric="f1_global_macro",

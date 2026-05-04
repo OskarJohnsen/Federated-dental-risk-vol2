@@ -89,9 +89,9 @@ def plot_quantity_skew(
         plt.show()
 
 
-Oskar_path = r"C:\Users\oskar\OneDrive\Desktop\4 Semester\Dataproject\Federated-dental-risk-vol2\federated-dental-risk-prediction\src\fdrp\analysis\Data\sweep_beta_summary_1.csv"
+Oskar_path = r"C:\Users\mejse\Documents\uni\4. semester\Dataprojekt\projekt\Federated-dental-risk-vol2\src\fdrp\analysis\Data\sweep_beta_summary_2.csv"
+
 
 plot_quantity_skew(
-    csv_path=Oskar_path,
-    metric="ece_macro",
+    csv_path=Oskar_path
 )

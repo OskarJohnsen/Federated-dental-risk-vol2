@@ -147,7 +147,7 @@ def plot_label_skew_in_two_figures(
         plt.show()
 
 
-Oskar_path = r"C:\Users\oskar\OneDrive\Desktop\4 Semester\Dataproject\Federated-dental-risk-vol2\federated-dental-risk-prediction\src\fdrp\analysis\Data\sweep_beta_summary_2.csv"
+Oskar_path = r"C:\Users\mejse\Documents\uni\4. semester\Dataprojekt\projekt\Federated-dental-risk-vol2\src\fdrp\analysis\Data\sweep_beta_summary_2.csv"
 
 
 BETA_L_VALUES = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0,50.0]
@@ -155,7 +155,7 @@ BETA_Q_VALUES = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 50.0]
 
 plot_label_skew_in_two_figures(
     csv_path=Oskar_path,
-    metric="f1_global_macro",
+    metric="ece_macro",
     beta_q_values=BETA_Q_VALUES,
     beta_l_values=BETA_L_VALUES,
 )
