@@ -43,7 +43,7 @@ class ExperimentConfig:
     
     # model
     model: Literal["MLP"] = "MLP"
-    hidden_size: List[int] = field(default_factory=lambda: [128, 64])
+    hidden_size: List[int] = field(default_factory=lambda: [64,64,64])
     dropout: float = 0.2
     input_size: Optional[int] = None
     
