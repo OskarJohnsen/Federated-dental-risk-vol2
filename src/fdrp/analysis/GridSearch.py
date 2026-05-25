@@ -30,6 +30,14 @@ from fdrp.ml.centralized.train import main as run_centralized
 from fdrp.ml.local.train import main as run_local
 from fdrp.ml.federated.train import main as run_federated
 
+"""
+The code below performs a grid search over different combinations of label skew (beta_L) and quantity skew (beta_Q) 
+for the three training paradigms: centralized, local, and federated learning. For each parameter combination, 
+a synthetic dataset is generated, partitioned using a constrained Dirichlet approach, 
+and evaluated using several performance metrics such as F1-score and MSE. And results are saved in a single file.
+
+We also used ChatGPT to assist with parts of the implementation and structuring of the code.
+"""
 
 # Grid
 BETA_L_VALUES = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0,50.0]

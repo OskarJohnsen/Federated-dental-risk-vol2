@@ -21,6 +21,11 @@ from fdrp.data_generation.partitioning.pool_partitioning import (
     compute_quantity_skew_metrics,
 )
 
+"""
+The code below generates and plots a dataset with required user settings. This code was used to test datapartitioning, which we have changed.
+Chat-GPT have assisted during writing of this code.
+"""
+
 
 # ============================================================
 # USER SETTINGS

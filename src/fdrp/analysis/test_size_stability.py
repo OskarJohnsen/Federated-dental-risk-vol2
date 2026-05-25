@@ -24,6 +24,14 @@ from fdrp.ml.models.base.trainer import BaseTrainer
 from fdrp.ml.util.seed import all_seeds
 
 
+"""
+We created this document to investigate how large a test dataset we need for consistent results.
+This was done very early in the project, when we had the impression that all code had to be executed from the terminal 
+(since “Smoothy”, who previously worked on the project, had implemented much of the project through terminal-based workflows). 
+As a result, the code became quite long and less structured than it otherwise might have been. 
+We also used ChatGPT to help generate parts of the code.
+"""
+
 # -------------------------------------------------------------------
 # Fælles helper: sample-size analyse fra metrics
 # -------------------------------------------------------------------

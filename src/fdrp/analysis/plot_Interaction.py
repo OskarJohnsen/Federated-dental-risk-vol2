@@ -2,6 +2,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+"""
+The code below plots a heatmap of the selected performance metric (e.g. f1_global_macro, f1_per_client_macro, mse_macro, etc.). 
+The script is used to visualize the results from the grid search and makes it easier to compare how different parameter combinations affect model performance.
+"""
+
 
 def plot_interaction_heatmaps(
     csv_path,
@@ -12,26 +17,6 @@ def plot_interaction_heatmaps(
     figsize=(18, 5),
     save_path=None,
 ):
-    """
-    Plot one heatmap per paradigm over the beta_L x beta_Q grid.
-
-    Parameters
-    ----------
-    csv_path : str
-        Path to summary CSV.
-    metric : str
-        Metric column to visualize.
-    beta_l_values : list[float] or None
-        Ordered beta_L values for rows. If None, inferred from data.
-    beta_q_values : list[float] or None
-        Ordered beta_Q values for columns. If None, inferred from data.
-    paradigms : tuple[str]
-        Paradigms to include.
-    figsize : tuple
-        Figure size.
-    save_path : str or None
-        Optional save path.
-    """
 
     df = pd.read_csv(csv_path)
 
@@ -119,9 +104,9 @@ def plot_interaction_heatmaps(
 
 BETA_L_VALUES = [0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 10.0]
 BETA_Q_VALUES = [0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 10.0]
-Oskar_path = r"C:\Users\mejse\Documents\uni\4. semester\Dataprojekt\projekt\Federated-dental-risk-vol2\src\fdrp\analysis\Data\sweep_beta_summary_2.csv"
+Mejse_path = r"C:\Users\mejse\Documents\uni\4. semester\Dataprojekt\projekt\Federated-dental-risk-vol2\src\fdrp\analysis\Data\sweep_beta_summary_2.csv"
 plot_interaction_heatmaps(
-    csv_path=Oskar_path,
+    csv_path=Mejse_path,
     metric="f1_global_macro",
     beta_l_values=BETA_L_VALUES,
     beta_q_values=BETA_Q_VALUES,

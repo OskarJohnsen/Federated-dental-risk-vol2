@@ -1,6 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+"""
+This code plots the results from a grid-search for fixed quantity-skew. We have a notebook version of this document. 
+We have rewritten the code inorder to make more clear plots for our presentation.
+Chat-GPT have helped writing this code.
+"""
+
 
 def plot_quantity_skew(
     csv_path,

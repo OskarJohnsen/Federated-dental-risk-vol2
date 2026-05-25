@@ -126,7 +126,7 @@ def plot_fedprox_mu_sweep(
     plt.show()
 
 
-Oskar_path = r"C:\Users\Oskar\Desktop\fedprox_mu_sweep_summary.csv"
+Oskar_path = r"C:\Users\oskar\OneDrive\Desktop\4 Semester\Dataproject\Federated-dental-risk-vol2\federated-dental-risk-prediction\src\fdrp\analysis\Data\fedprox_mu_sweep_summary_05_15.csv"
 plot_fedprox_mu_sweep(
     csv_path=Oskar_path,
     metric="f1_global_macro",

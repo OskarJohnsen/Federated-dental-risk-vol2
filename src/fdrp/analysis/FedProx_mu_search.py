@@ -27,6 +27,16 @@ from fdrp.ml.centralized.train import main as run_centralized
 from fdrp.ml.local.train import main as run_local
 from fdrp.ml.federated.train import main as run_federated
 
+"""
+The code below performs a parameter sweep over different values of the FedProx regularization parameter μ 
+and compares the performance of centralized, local, FedAvg, and FedProx training. For each experiment, 
+a synthetic dataset is generated and partitioned using the constrained Dirichlet partitioning approach with 
+fixed values of label skew (beta_L) and quantity skew (beta_Q). 
+The experiments are then evaluated using several metrics such as F1-score and MSE
+
+We also used ChatGPT to help with parts of the implementation and overall structuring of the code
+"""
+
 
 # =========================
 # USER SETTINGS
