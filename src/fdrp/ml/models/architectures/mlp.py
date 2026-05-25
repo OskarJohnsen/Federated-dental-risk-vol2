@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from fdrp.ml.models.base.model import BaseModel
 
-"""
+
 class MLP(BaseModel):
 
     def __init__(self, input_size: int, hidden_size: List[int] = [64, 128,64], dropout: float = 0.2, n_clf_classes: Optional[int] = None):
@@ -52,7 +52,7 @@ class MLP(BaseModel):
         })
         return config
 
-
+"""
 
 class MLPBlock(nn.Module):
     
@@ -194,7 +194,6 @@ class MLP(BaseModel):
         })
         return config
 
-"""
 # 2 hidden head lag:
 
 
@@ -272,3 +271,4 @@ class MLP(BaseModel):
             "architecture": "MLP_multi_head"
         })
         return config
+"""
