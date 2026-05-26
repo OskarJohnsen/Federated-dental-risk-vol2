@@ -8,10 +8,10 @@ Note that this project was taken over from a germen guy named Jonas, who will be
 
 | Document | Description |
 |---|---|
-| [Installation Guide](docs our/InstallationGuide.md) | Installation and environment setup |
-| [Results](docs our/Results.pdf) | Experimental results |
-| [READMEORIGINAL](docs smoothy/READMEORIGINAL.md) | Original README from the repository before we took over the project |
-| [Notes for Ourselves](docs our/notes-for-ourselves.pdf) | Notes and additional information related to the project. |
+| [Installation Guide](docs_our/InstallationGuide.md) | Installation and environment setup |
+| [Results](docs_our/Results.pdf) | Experimental results |
+| [READMEORIGINAL](docs_smoothy/READMEORIGINAL.md) | Original README from the repository before we took over the project |
+| [Notes for Ourselves](docs_our/notes-for-ourselves.pdf) | Notes and additional information related to the project. |
 ---
 
 # Project Structure
@@ -27,8 +27,8 @@ Federated-dental-risk-vol2/
 ├── 🟡 checkpoints/          # Model checkpoints
 ├── 🟡 configs/              # Configuration files
 ├── 🟡 data/                 # Generated datasets and results
-├── 🟢 docs our/             # Documentation and setup guides
-├── ⚪ docs smoothy			# Original Documentation and setup guides
+├── 🟢 docs_our/             # Documentation and setup guides
+├── ⚪ docs_smoothy			# Original Documentation and setup guides
 ├── 🟢 Groundwork/           # Groundwork and preliminary material
 ├── 🟢 images/               # Figures used in README and documentation
 ├── ⚪ notebooks/            # Jupyter notebooks / exploratory analysis
@@ -44,14 +44,14 @@ Federated-dental-risk-vol2/
 └── 🟢 README.md
 ```
 
-A detailed overview of which parts that were developed or modified by us can be found here: [Project Contribution Overview](docs our/project_contribution_overview.md)
+A detailed overview of which parts that were developed or modified by us can be found here: [Project Contribution Overview](docs_our/project_contribution_overview.md)
 
 ---
 
 # Project Deskription
 
 **Note:**  
-This project description was written on 06-03-2026 and therefore does not fully reflect the current state of the project. Several additional methods, experiments, and analyses have since been implemented. For a more up-to-date overview of the work completed, see the [Results](docs our/Results.pdf) document.
+This project description was written on 06-03-2026 and therefore does not fully reflect the current state of the project. Several additional methods, experiments, and analyses have since been implemented. For a more up-to-date overview of the work completed, see the [Results](docs_our/Results.pdf) document.
 
 The overall purpose of this project is to predict the probability of four complications after extraction of third molars (wisdom teeth). These complications are nerve damage, Alveolar osteitis (dry socket), secondary infection, and excessive bleeding. A key challenge is that clinical data is spread across many dental clinics. Laws regarding data protection such as GDPR prevent data from being collected in one central database. Therefore it is not possible to train a traditional centralized machine learning model. To address this, we explore federated learning, where models are trained locally at each clinic and only model weights —not patient data—are shared. The performance of the FL-method is compared to a centralized model and the average performance of locally trained models.
 
