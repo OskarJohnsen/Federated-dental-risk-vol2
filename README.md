@@ -11,7 +11,7 @@ A key challenge is that clinical data is spread across many dental clinics. Laws
 To address this, we explore federated learning, where models are trained locally at each clinic and only model weights — not patient data — are shared. The performance of the FL-method is compared to a centralized model and the average performance of locally trained models.
 
 <p align="center">
-  <img src="images/federated_setup.png" width="850">
+  <img src="images/federated_setup.png" width="450">
 </p>
 
 <p align="center">
@@ -38,7 +38,7 @@ By evaluating predictions of the risk categories instead (using metrics like F1 
 
 ---
 
-# Data generation
+## Data generation
 
 The data we work with in the project is simulated. A previous part of the project has been to develop code that generates the data.
 
@@ -47,7 +47,7 @@ The datapoints correspond to patients that have undergone a third molar extracti
 Below is an excerpt of some of these variables:
 
 <p align="center">
-  <img src="images/variables_table.png" width="450">
+  <img src="images/variables_table.png" width="250">
 </p>
 
 <p align="center">
@@ -66,7 +66,7 @@ Using the percentiles of the risk distribution we partition the data points into
 
 ---
 
-# Data partitioning
+## Data partitioning
 
 From here data can be partitioned into clients to simulate the real-world scenario of having different dental clinics.
 
@@ -81,7 +81,7 @@ We have two different beta-parameters:
 Below we have a figure illustrating this.
 
 <p align="center">
-  <img src="images/client_distribution.png" width="700">
+  <img src="images/client_distribution.png" width="400">
 </p>
 
 <p align="center">
@@ -94,9 +94,9 @@ This leads us to what we are specifically working on right now.
 
 ---
 
-# What we are working on now
+## What we are working on now
 
-## Beta sweep
+### Beta sweep
 
 Since we do not have access to the real-world data we do not know what the real distribution of the data is.
 
@@ -123,7 +123,7 @@ We also want to isolate:
 - interaction effects between the two
 
 <p align="center">
-  <img src="images/beta_sweep.png" width="750">
+  <img src="images/beta_sweep.png" width="450">
 </p>
 
 <p align="center">
@@ -132,7 +132,7 @@ We also want to isolate:
 
 ---
 
-# Aggregation methods
+## Aggregation methods
 
 The aggregation method currently in use is a method called FedAvg, which is a weighted average where the weights correspond to the number of patients per clinic.
 
@@ -150,7 +150,7 @@ The goal is to determine which aggregation methods work best under different lev
 
 ---
 
-# Long term plans
+## Long term plans
 
 It is still unclear how long the already mentioned implementation will take, so we do not know if we will have time for more than this.
 
