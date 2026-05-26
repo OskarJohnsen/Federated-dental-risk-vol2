@@ -1,153 +1,175 @@
 # Federated Dental Risk Prediction
 
-A federated learning system for predicting post-operative complications following wisdom tooth extraction. The project consists of two main components:
+Jonas Westergaard, Mejse Linderoth, Oskar Johnsen
 
-1. **Dataset Generation**: Synthetic medical data generation with configurable IID/non-IID partitioning
-2. **Machine Learning Pipeline**: Training models using centralized, local, or federated learning paradigms
+---
 
-## Quick Start
+The overall purpose of this project is to predict the probability of four complications after extraction of third molars (wisdom teeth). These complications are nerve damage, Alveolar osteitis (dry socket), secondary infection, and excessive bleeding.
 
-### Installation
+A key challenge is that clinical data is spread across many dental clinics. Laws regarding data protection such as GDPR prevent data from being collected in one central database. Therefore it is not possible to train a traditional centralized machine learning model.
 
-```bash
-# Clone the repository
-git clone https://github.com/smoothyy3/federated-dental-risk-prediction
-cd federated-dental-risk-prediction
+To address this, we explore federated learning, where models are trained locally at each clinic and only model weights — not patient data — are shared. The performance of the FL-method is compared to a centralized model and the average performance of locally trained models.
 
-# Install the package
-pip install -e .
-```
+<p align="center">
+  <img src="images/federated_setup.png" width="850">
+</p>
 
-### Setup
+<p align="center">
+  <em>Figure 1: Overall federated learning setup.</em>
+</p>
 
-1. **Configure WandB** (required for training):
-   ```bash
-   wandb login
-   export WANDB_PROJECT=your-project-name  # Optional, defaults to 'federated-dental-risk-prediction'
-   ```
-   See [SETUP.md](SETUP.md) for detailed setup instructions.
+The figure above illustrates the overall federated setup used in this project. A global model is initialized on a central server and distributed to participating clients. Each clinic then trains the model locally on its own data and sends the updated model parameters (weights) back to the server.
 
-2. **Generate a dataset**:
-   ```bash
-   fdrp-generate
-   ```
-   This creates a synthetic dataset and automatically generates a global test set.
+The server aggregates these updates using an aggregation method (determining which method to use is part of our project). The aggregated weights form a new global model, which is then redistributed to the clients. This process is repeated for several federated rounds (default is 6 federated rounds).
 
-3. **Train a model**:
-   ```bash
-   fdrp-train centralized    # Centralized training
-   fdrp-train local          # Local (per-client) training
-   fdrp-train federated      # Federated learning
-   ```
+At each clinic, the model that is trained locally is a multilayer perceptron (MLP) implemented in PyTorch. The model takes patient characteristics as input and predicts the probability of the four complications.
 
-   On 16/02 we added the option for different aggregation methods.  
-   The default aggregation method is FedAvg. Use
+The neural network consists of an input layer with 30 patient features after preprocessing, followed by two fully connected hidden layers with 128 and 64 neurons. The two hidden layers use ReLU activation functions. Dropout regularization is applied between layers to reduce overfitting.
 
-   ```bash
-   fdrp-train federated --aggregation-method balanced  or
-   fdrp-train federated -a balanced
-   ```
+The final layer has one output neuron for each complication, and the model outputs probabilities using a sigmoid activation function. During training, the model is optimized using binary cross-entropy with logits.
 
-   for aggregation weighted by number of complications.
+In addition to predicting complication probabilities, the predicted risks are mapped into three categories: low, mid, and high risk using either global or local percentile thresholds (33rd and 67th percentiles).
 
+This is because the complications are rare events, meaning that the observed binary outcomes contain substantial noise. In the data generation process, complications are sampled from the underlying risk probabilities, so even patients with relatively high risk will often have no complication in the data.
 
+As a result, evaluating models directly on binary outcomes becomes unstable, and a naive model that always predicts no complication could achieve high accuracy.
 
-## Documentation
+By evaluating predictions of the risk categories instead (using metrics like F1 macro score), the evaluation reflects whether the model correctly ranks patients by risk rather than the unstable binary outcomes.
 
-- **[SETUP.md](SETUP.md)** - Installation, configuration, and environment setup
-- **[DATASET_GENERATION.md](docs/DATASET_GENERATION.md)** - Detailed guide to dataset generation system
-- **[TRAINING.md](docs/TRAINING.md)** - Machine learning pipeline and training paradigms
-- **[STATE_AND_NEXT_STEPS.md](docs/STATE_AND_NEXT_STEPS.md)** - Current project state, roadmap for current experiment
-- **[Technical Documentation (PDF)](docs/TECHNICAL_DOCUMENTATION.pdf)** – Detailed technical description of the implementation (Mejse Linderoth, Jonas Westergaard, Oskar Johnsen)
-- **[Results (PDF)](docs/Results.pdf)** – Experimental results and analysis of the federated learning experiments (Mejse Linderoth, Jonas Westergaard, Oskar Johnsen)
+---
 
-## Project Structure
+# Data generation
 
-```
-federated-dental-risk-prediction/
-├── configs/              # Configuration files (JSON)
-├── data/                 # Generated datasets and results
-│   ├── raw/             # Raw datasets (excluded from git)
-│   ├── processed/       # Processed datasets (excluded from git)
-│   └── results/         # Visualization outputs (tracked in git)
-├── notebooks/            # Jupyter notebooks (EDA)
-├── scripts/              # Utility scripts
-│   ├── export_wandb_run.py    # Export WandB run to CSV
-│   └── visualize_results.py   # Generate plots
-├── src/fdrp/
-│   ├── data_generation/  # Dataset generation system
-│   └── ml/              # Machine learning pipeline
-└── pyproject.toml        # Package configuration
-```
+The data we work with in the project is simulated. A previous part of the project has been to develop code that generates the data.
 
-## Key Features
+The datapoints correspond to patients that have undergone a third molar extraction surgery. The data generation process starts by generating people with demographics and characteristics that mimic those of the real world.
 
-### Dataset Generation
-- **Synthetic medical data** based on evidence-based rules
-- **Configurable IID/non-IID partitioning** using NIID-Bench (Dirichlet distribution)
-- **Automatic test set creation** and backup
-- **Client-specific variations** (prevalence shifts, missingness, noise)
+Below is an excerpt of some of these variables:
 
-### Machine Learning
-- **Three training paradigms**: Centralized, Local, Federated
-- **Multi-task learning**: Trains on 4 binary risk outcomes, evaluates on risk categories
-- **Risk categorization**: Uses percentile-based thresholds (33rd/67th) to convert probabilities to Low/Medium/High categories
-- **Dual evaluation**:
-  - **Probability metrics**: MSE/MAE comparing predicted vs. true risk probabilities
-  - **Category metrics**: F1/Accuracy comparing predicted vs. true risk categories
-- **Threshold strategies**: Global thresholds (from dataset) or per-client thresholds (from validation set)
-- **WandB integration**: Experiment tracking and logging
+<p align="center">
+  <img src="images/variables_table.png" width="450">
+</p>
 
-## CLI Commands
+<p align="center">
+  <em>Table 1: Selected input variables used in the model.</em>
+</p>
 
-### Dataset Generation
-```bash
-fdrp-generate [OPTIONS]
+Using knowledge from literature and clinical experts these characteristics are used to calculate a complication risk.
 
-Options:
-  --seed INT              Random seed override
-  --output-dir PATH       Output directory (default: from config)
-  --formats TEXT          Output formats: csv,xlsx (default: csv,xlsx)
-  --create-test-set       Create global test set (default: True)
-  --test-samples INT      Number of test samples (default: 3000)
-  --test-seed INT         Test set random seed (default: 999)
-  --backup                Create backup of original dataset (default: True)
-```
+The foundation of these calculations is that we have a base risk (the base incidence of the complication). We then multiply this base risk if a generated person has a characteristic that makes them more or less likely to get a complication.
 
-### Training
-```bash
-fdrp-train {centralized|local|federated}
-```
+When the risk is calculated we draw from a uniform distribution in order to randomly — but based on the probability — generate whether or not a simulated person gets the complication.
 
-## Medical Domain
+This introduces stochasticity and noise in the data.
 
-The system simulates federated learning across multiple dental clinics to predict four post-operative complications:
+Using the percentiles of the risk distribution we partition the data points into low, mid and high categories.
 
-1. **Alveolar Osteitis (Dry Socket)** - Base incidence: 2%
-2. **Secondary Infection** - Base incidence: 1.5%
-3. **Nerve Dysesthesia** - Base incidence: 0.6% (mandibular only)
-4. **Bleeding** - Base incidence: 0.08%
+---
 
-See [DATASET_GENERATION.md](docs/DATASET_GENERATION.md) for detailed medical domain information.
+# Data partitioning
 
-## Configuration
+From here data can be partitioned into clients to simulate the real-world scenario of having different dental clinics.
 
-The project uses constants in `src/fdrp/ml/constants.py` to control dataset paths and experiment organization:
-- `DATASET`: Dataset identifier (default: "A") - used in file paths and experiment IDs
-- `IID_TYPE`: IID or non-IID partitioning (default: "non-iid") - controls which dataset variant is used
-- `RISK_NAMES`: List of four risk types - used throughout the codebase for metrics and evaluation
+This is done using a Dirichlet distribution. A parameter in the Dirichlet distribution is β, which controls how skewed the distribution is.
 
-See [SETUP.md](SETUP.md) for detailed information about these constants and how to modify them.
+Bigger values result in more skewed data and smaller values result in more uniformly distributed data.
 
-## Contributing
+We have two different beta-parameters:
+- one controlling distribution of data amount across clients
+- one controlling amount of positive cases across clients
 
-When working on this project:
-- Use environment variables for WandB configuration (see [SETUP.md](SETUP.md))
-- Follow the existing code structure and patterns
-- Update documentation when adding new features
-- Test changes with both IID and non-IID datasets
-- Be aware of the constants in `constants.py` as they affect file paths and experiment organization
+Below we have a figure illustrating this.
 
-## License
+<p align="center">
+  <img src="images/client_distribution.png" width="700">
+</p>
 
-#todo
+<p align="center">
+  <em>Figure 2: Distribution of datapoints and complications across clients.</em>
+</p>
+
+Here we see that the data is not evenly distributed across clients — neither in terms of number of datapoints nor number of positive cases.
+
+This leads us to what we are specifically working on right now.
+
+---
+
+# What we are working on now
+
+## Beta sweep
+
+Since we do not have access to the real-world data we do not know what the real distribution of the data is.
+
+We therefore want to train and evaluate our model for many different data-configurations, across different levels of IID-ness, in order to make sure that our model works well for all possible combinations of distributions.
+
+This gives us information about when the model performs well and when it performs worse and should thus be trusted less.
+
+We want to train and evaluate a model for a 2-dimensional grid of possible combinations of β-values.
+
+For each combination of β-values we train:
+- a centralized model
+- a federated model
+- a local model
+
+We track the performance of the federated model relative to both the centralized and local models.
+
+The centralized model serves as an upper benchmark, as it is trained on the full dataset without any data partitioning.
+
+Using the beta sweep we can track performance across beta configurations, where our goal is to optimize the federated model to have a performance close to that of the centralized model.
+
+We also want to isolate:
+- the effects of label skew
+- the effects of quantity skew
+- interaction effects between the two
+
+<p align="center">
+  <img src="images/beta_sweep.png" width="750">
+</p>
+
+<p align="center">
+  <em>Figure 3: Current beta sweep performance results.</em>
+</p>
+
+---
+
+# Aggregation methods
+
+The aggregation method currently in use is a method called FedAvg, which is a weighted average where the weights correspond to the number of patients per clinic.
+
+We have also implemented another method called balanced average, where the weights correspond to the number of cases per clinic that experienced a complication.
+
+There are also other more complicated aggregation methods that could be used, and this is something we want to investigate further.
+
+We are currently investigating:
+- FedAvg
+- Balanced averaging
+- FedProx
+- FedSGD
+
+The goal is to determine which aggregation methods work best under different levels of heterogeneity.
+
+---
+
+# Long term plans
+
+It is still unclear how long the already mentioned implementation will take, so we do not know if we will have time for more than this.
+
+If time permits, we plan to investigate methods for updating the trained model sequentially as new data becomes available, allowing the model to incorporate newly observed cases without requiring a full retraining.
+
+---
+
+# Documentation
+
+Coming soon.
+
+---
+
+# Installation Guide
+
+Coming soon.
+
+---
+
+# Results
+
+Coming soon.
