@@ -39,18 +39,17 @@ Federated-dental-risk-vol2/
 ├── ⚪ wandb/                # WandB logs and experiment tracking
 ├── ⚪ .gitignore
 ├── ⚪ pyproject.toml
-├── 🟢 README.md
-└── 🟡 SETUP.md
+└── 🟢 README.md
 ```
 
-Indsæt document med endelig liste med documenter vi har lavet/rettet.
+A detailed overview of which parts that were developed or modified by us can be found here: [Project Contribution Overview](docs/project_contribution_overview.md)
 
 ---
 
-#Project Deskription
+# Project Deskription
 
 **Note:**  
-This project description was originally written on 06-03-2026 and therefore does not fully reflect the current state of the project. Several additional methods, experiments, and analyses have since been implemented. For a more up-to-date overview of the work completed, see the [Results](docs/results.pdf) document.
+This project description was written on 06-03-2026 and therefore does not fully reflect the current state of the project. Several additional methods, experiments, and analyses have since been implemented. For a more up-to-date overview of the work completed, see the [Results](docs/results.pdf) document.
 
 The overall purpose of this project is to predict the probability of four complications after extraction of third molars (wisdom teeth). These complications are nerve damage, Alveolar osteitis (dry socket), secondary infection, and excessive bleeding. A key challenge is that clinical data is spread across many dental clinics. Laws regarding data protection such as GDPR prevent data from being collected in one central database. Therefore it is not possible to train a traditional centralized machine learning model. To address this, we explore federated learning, where models are trained locally at each clinic and only model weights —not patient data—are shared. The performance of the FL-method is compared to a centralized model and the average performance of locally trained models.
 

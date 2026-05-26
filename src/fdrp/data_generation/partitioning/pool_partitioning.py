@@ -3,7 +3,9 @@ from typing import Optional, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
-
+"""
+This code was implementet with ChatGPT
+"""
 def _sample_client_sizes(
     n_total: int,
     n_clients: int,
