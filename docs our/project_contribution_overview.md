@@ -12,11 +12,18 @@
 
 - `src-fdrp-ml-models-architectures-mlp`
 - `src-fdrp-ml-federated-train`
+- `src-fdrp-ml-centralized-train`
 - `src-fdrp-ml-federated-aggregation`
 - `src-fdrp-ml-config-experiment_config`
 - `src-fdrp-ml-cli`
+- `src-fdrp-ml-models-architectures-mlp`
+- `src-fdrp-ml-models-base-model`
+- `src-fdrp-ml-models-base-trainer`
 - `src-fdrp-data_generation-partitioning`
-- `src-fdrp-data_pool-partitioning`
+- `src-fdrp-data_generation-data_pool-partitioning`
+- `configs-generation_confiq`
+- `src-fdrp-data_generation-generation-synth`
+-
 
 ---
 
