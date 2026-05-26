@@ -93,11 +93,11 @@ It is still unclear how long the already mentioned implementation will take, so 
 
 # Documentation
 
-# Documentation
-
 | Document | Description |
 |---|---|
 | [Installation Guide](docs/InstallationGuide.md) | Installation and environment setup |
+| [Results](docs/results.pdf) | Experimental results |
+| [READMEORIGINAL](docs/READMEORIGINAL.md) | Original README from the repository before we took over the project |
 
 ---
 
@@ -105,7 +105,7 @@ It is still unclear how long the already mentioned implementation will take, so 
 
 Legend:
 
-- 🟢 Mainly developed by us
+- 🟢 Developed by us
 - 🟡 Modified or extended by us
 - ⚪ Original / mostly unchanged
 
@@ -130,3 +130,5 @@ Federated-dental-risk-vol2/
 ├── 🟢 README.md
 └── 🟡 SETUP.md
 ```
+
+Indsæt document med endelig liste med documenter vi har lavet/rettet.

@@ -1,6 +1,6 @@
 # Setup Guide
 
-This guide explains how to install and set up the project for running experiments locally.
+This guide explains how to install and set up the project.
 
 ## Installation
 
