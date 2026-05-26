@@ -64,8 +64,6 @@ We want to train and evaluate a model for a 2-dimensional grid of possible combi
 
 We track the performance of the federated model relative to both the centralized and the local models. The centralized model serves as an upper benchmark, as it is trained on the full dataset without any data partitioning. Using the beta sweep we can track performance across beta configurations, where our goal is to optimize the federated model to have a performance close to that of the centralized model. The figure below shows our current performance across a common β-value (beta quantity and beta label is equal) with FedAvg as an aggregation method (See next section).
 
-We also want to try to isolate the effects of changing just one of the β-values, thereby finding the impact of a label skew alone or a quantity skew. In addition, we examine potential interaction effects between the two types of heterogeneity.
-
 <p align="center">
   <img src="images/beta_sweep.png" width="450">
 </p>
@@ -74,6 +72,7 @@ We also want to try to isolate the effects of changing just one of the β-values
   <em>Figure 3: Current beta sweep performance results.</em>
 </p>
 
+We also want to try to isolate the effects of changing just one of the β-values, thereby finding the impact of a label skew alone or a quantity skew. In addition, we examine potential interaction effects between the two types of heterogeneity.
 ---
 
 ## Aggregation methods
@@ -98,7 +97,52 @@ Coming soon.
 
 # Installation Guide
 
-Coming soon.
+```bash
+# Clone the repository
+git clone https://github.com/OskarJohnsen/Federated-dental-risk-vol2
+cd federated-dental-risk-vol2
+
+# Install the package
+pip install -e .
+```
+
+### Setup
+
+1. **Configure WandB** (required for training)
+
+   Jonas/Smoothy who previously worked on the project used Weights & Biases (WandB) for experiment tracking and logging.
+
+   ```bash
+   wandb login
+   export WANDB_PROJECT=your-project-name
+   ```
+
+   `WANDB_PROJECT` is optional and defaults to:
+   `federated-dental-risk-prediction`
+
+   If you do not want to use WandB logging, you can disable it with:
+
+   ```bash
+   export WANDB_MODE=disabled
+   ```
+
+2. **Generate a dataset**
+
+   ```bash
+   fdrp-generate
+   ```
+
+   This generates a synthetic dataset simulating patients undergoing third molar extraction surgery. A global test set is automatically created as part of the generation process.
+
+3. **Train a model**
+
+   ```bash
+   fdrp-train centralized    # Centralized training
+   fdrp-train local          # Local (per-client) training
+   fdrp-train federated      # Federated learning
+   ```
+
+   The project supports centralized, local, and federated training setups. Training and generating configurations can be modified through the experiment configuration files.
 
 ---
 
