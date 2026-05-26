@@ -2,6 +2,7 @@
 
 Jonas Westergaard, Mejse Linderoth, Oskar Johnsen
 
+Note that this project was taken over from a germen guy named Jonas, who will be reffered by his github accountname "Smoothy". 
 
 # Documentation
 
