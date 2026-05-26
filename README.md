@@ -10,7 +10,7 @@ Jonas Westergaard, Mejse Linderoth, Oskar Johnsen
 | [Installation Guide](docs/InstallationGuide.md) | Installation and environment setup |
 | [Results](docs/Results.pdf) | Experimental results |
 | [READMEORIGINAL](docs/READMEORIGINAL.md) | Original README from the repository before we took over the project |
-
+| [Notes for Ourselves](docs/noter-til-aflevering.pdf) | Notes and additional information related to the project. |
 ---
 
 # Project Structure
