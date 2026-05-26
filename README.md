@@ -2,8 +2,54 @@
 
 Jonas Westergaard, Mejse Linderoth, Oskar Johnsen
 
+
+# Documentation
+
+| Document | Description |
+|---|---|
+| [Installation Guide](docs/InstallationGuide.md) | Installation and environment setup |
+| [Results](docs/Results.pdf) | Experimental results |
+| [READMEORIGINAL](docs/READMEORIGINAL.md) | Original README from the repository before we took over the project |
+
 ---
-*Note:**  
+
+# Project Structure
+
+Legend:
+
+- 🟢 Developed by us
+- 🟡 Modified or extended by us
+- ⚪ Original / mostly unchanged
+
+```text
+Federated-dental-risk-vol2/
+├── 🟡 checkpoints/          # Model checkpoints
+├── 🟡 configs/              # Configuration files
+├── 🟡 data/                 # Generated datasets and results
+├── 🟡 docs/                 # Documentation and setup guides
+├── 🟢 Groundwork/           # Groundwork and preliminary material
+├── 🟢 images/               # Figures used in README and documentation
+├── ⚪ notebooks/            # Jupyter notebooks / exploratory analysis
+├── ⚪ scripts/              # Utility and visualization scripts
+├── 🟡 src/
+│   ├── 🟢 analysis/         # Analysis and experiment code
+│   ├── ⚪ core/             # Core utilities and shared functionality
+│   ├── 🟡 data_generation/  # Synthetic dataset generation pipeline
+│   └── 🟡 ml/               # Machine learning and federated learning pipeline
+├── ⚪ wandb/                # WandB logs and experiment tracking
+├── ⚪ .gitignore
+├── ⚪ pyproject.toml
+├── 🟢 README.md
+└── 🟡 SETUP.md
+```
+
+Indsæt document med endelig liste med documenter vi har lavet/rettet.
+
+---
+
+#Project Deskription
+
+**Note:**  
 This project description was originally written on 06-03-2026 and therefore does not fully reflect the current state of the project. Several additional methods, experiments, and analyses have since been implemented. For a more up-to-date overview of the work completed, see the [Results](docs/results.pdf) document.
 
 The overall purpose of this project is to predict the probability of four complications after extraction of third molars (wisdom teeth). These complications are nerve damage, Alveolar osteitis (dry socket), secondary infection, and excessive bleeding. A key challenge is that clinical data is spread across many dental clinics. Laws regarding data protection such as GDPR prevent data from being collected in one central database. Therefore it is not possible to train a traditional centralized machine learning model. To address this, we explore federated learning, where models are trained locally at each clinic and only model weights —not patient data—are shared. The performance of the FL-method is compared to a centralized model and the average performance of locally trained models.
@@ -93,44 +139,3 @@ It is still unclear how long the already mentioned implementation will take, so 
 
 ---
 
-# Documentation
-
-| Document | Description |
-|---|---|
-| [Installation Guide](docs/InstallationGuide.md) | Installation and environment setup |
-| [Results](docs/Results.pdf) | Experimental results |
-| [READMEORIGINAL](docs/READMEORIGINAL.md) | Original README from the repository before we took over the project |
-
----
-
-# Project Structure
-
-Legend:
-
-- 🟢 Developed by us
-- 🟡 Modified or extended by us
-- ⚪ Original / mostly unchanged
-
-```text
-Federated-dental-risk-vol2/
-├── 🟡 checkpoints/          # Model checkpoints
-├── 🟡 configs/              # Configuration files
-├── 🟡 data/                 # Generated datasets and results
-├── 🟡 docs/                 # Documentation and setup guides
-├── 🟢 Groundwork/           # Groundwork and preliminary material
-├── 🟢 images/               # Figures used in README and documentation
-├── ⚪ notebooks/            # Jupyter notebooks / exploratory analysis
-├── ⚪ scripts/              # Utility and visualization scripts
-├── 🟡 src/
-│   ├── 🟢 analysis/         # Analysis and experiment code
-│   ├── ⚪ core/             # Core utilities and shared functionality
-│   ├── 🟡 data_generation/  # Synthetic dataset generation pipeline
-│   └── 🟡 ml/               # Machine learning and federated learning pipeline
-├── ⚪ wandb/                # WandB logs and experiment tracking
-├── ⚪ .gitignore
-├── ⚪ pyproject.toml
-├── 🟢 README.md
-└── 🟡 SETUP.md
-```
-
-Indsæt document med endelig liste med documenter vi har lavet/rettet.

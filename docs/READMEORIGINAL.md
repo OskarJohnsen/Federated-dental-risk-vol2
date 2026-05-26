@@ -43,9 +43,9 @@ pip install -e .
 ## Documentation
 
 - **[SETUP.md](SETUP.md)** - Installation, configuration, and environment setup
-- **[DATASET_GENERATION.md](docs/DATASET_GENERATION.md)** - Detailed guide to dataset generation system
-- **[TRAINING.md](docs/TRAINING.md)** - Machine learning pipeline and training paradigms
-- **[STATE_AND_NEXT_STEPS.md](docs/STATE_AND_NEXT_STEPS.md)** - Current project state, roadmap for current experiment
+- **[DATASET_GENERATION.md](DATASET_GENERATION.md)** - Detailed guide to dataset generation system
+- **[TRAINING.md](TRAINING.md)** - Machine learning pipeline and training paradigms
+- **[STATE_AND_NEXT_STEPS.md](STATE_AND_NEXT_STEPS.md)** - Current project state, roadmap for current experiment
 
 ## Project Structure
 
