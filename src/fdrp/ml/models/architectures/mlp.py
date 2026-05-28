@@ -3,10 +3,10 @@ import torch
 import torch.nn as nn
 from fdrp.ml.models.base.model import BaseModel
 
-
+"""
 class MLP(BaseModel):
 
-    def __init__(self, input_size: int, hidden_size: List[int] = [64, 128,64], dropout: float = 0.2, n_clf_classes: Optional[int] = None):
+    def __init__(self, input_size: int, hidden_size: List[int] = [128, 64], dropout: float = 0.2, n_clf_classes: Optional[int] = None):
         super().__init__(input_size, n_classification_classes=n_clf_classes)
         
         self.hidden_sizes = hidden_size
@@ -124,7 +124,7 @@ class MLP(BaseModel):
             "architecture": "MLP_separate_networks"
         })
         return config
-
+"""
 
 class MLP(BaseModel):
 
@@ -202,7 +202,7 @@ class MLP(BaseModel):
     def __init__(
         self,
         input_size: int,
-        hidden_size: List[int] = [64,64,64],
+        hidden_size: List[int] = [128,64],
         dropout: float = 0.2,
         n_clf_classes: Optional[int] = None,
     ):
@@ -226,7 +226,7 @@ class MLP(BaseModel):
         shared_output_dim = input_dim
 
         # ===== HEAD CONFIG (HER styrer du det) =====
-        head_hidden_sizes = [256*2, 256]  
+        head_hidden_sizes = [128, 64]  
 
         if n_clf_classes is not None:
             self.classification_heads = nn.ModuleList([

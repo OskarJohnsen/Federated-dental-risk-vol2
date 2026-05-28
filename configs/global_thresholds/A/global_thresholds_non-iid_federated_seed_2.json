@@ -1,0 +1,41 @@
+{
+  "AlveolarOsteitis": {
+    "low_medium": 0.0464,
+    "medium_high": 0.1044
+  },
+  "SecondaryInfection": {
+    "low_medium": 0.020475000000000004,
+    "medium_high": 0.047775
+  },
+  "NerveDysesthesia": {
+    "low_medium": 0.0008747999999999999,
+    "medium_high": 0.005940000000000001
+  },
+  "Bleeding": {
+    "low_medium": 0.003,
+    "medium_high": 0.007
+  },
+  "_partition_metadata": {
+    "data_seed": 2,
+    "beta_L": 1.0,
+    "beta_Q": 1.0,
+    "label_column": "Risk_Category_Composite",
+    "iid_type": "non-iid",
+    "partition_method": "constrained_dirichlet",
+    "heterogeneity_metrics": {
+      "mean_kl_divergence": 0.4427160138389363,
+      "std_kl_divergence": 0.3658202745366262
+    },
+    "quantity_skew_metrics": {
+      "min_client_size": 1203,
+      "max_client_size": 11068,
+      "std_client_size": 3292.9475550029642
+    },
+    "final_train_size": 47000,
+    "test_size": 3000,
+    "pool_rows": 50000,
+    "remaining_rows_after_test_split": 47000,
+    "min_size": 100,
+    "pool_multiplier": 1
+  }
+}
