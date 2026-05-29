@@ -31,8 +31,8 @@ Chat-GPT have assisted during writing of this code.
 # USER SETTINGS
 # ============================================================
 BETA_L = 1.0
-BETA_Q = 100
-SEED = 42
+BETA_Q = 1.0
+SEED = 1
 
 TEST_SIZE = 3000
 MIN_SIZE = 100
